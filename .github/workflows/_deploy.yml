@@ -1,0 +1,44 @@
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      env_name:
+        description: dev or uat
+        type: string
+        required: true
+      variant:
+        description: Pipeline variant, e.g. default or fms
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows, knowledge-hub]
+    # Configure "Required reviewers" on the uat environment for the approval gate.
+    environment:
+      name: ${{ inputs.env_name }}
+      url: http://${{ vars.VM_HOST }}:${{ inputs.env_name == 'uat' && '8080' || '8081' }}/${{ inputs.variant }}/
+    concurrency:
+      group: deploy-${{ inputs.env_name }}-${{ inputs.variant }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: deploy
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: ${{ runner.temp }}\site
+      - name: Start web server
+        shell: powershell
+        run: .\deploy\windows\start_server.ps1
+      - name: Deploy
+        shell: powershell
+        env:
+          ENV_NAME: ${{ inputs.env_name }}
+          VARIANT: ${{ inputs.variant }}
+        run: .\deploy\windows\deploy.ps1 -EnvName $env:ENV_NAME -Variant $env:VARIANT -Site "$env:RUNNER_TEMP\site" -Sha $env:GITHUB_SHA

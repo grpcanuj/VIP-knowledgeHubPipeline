@@ -1,0 +1,40 @@
+name: guard-variant
+
+# Keeps variant branches from diverging in the common UI, deploy tooling and workflows.
+on:
+  pull_request:
+    branches: ["variant/**"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  guard:
+    runs-on: [self-hosted, windows, knowledge-hub]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Variant branch may only change pipeline content
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          UI_DIR: Knowledge_Hub_Build_Pipeline_4/Knowledge Hub Tool
+        run: |
+          variant="${BASE_REF#variant/}"
+          [[ "$variant" =~ ^[a-z0-9_-]+$ ]] || { echo "Invalid variant name: $variant" >&2; exit 1; }
+
+          bad=0
+          while IFS= read -r f; do
+            case "$f" in
+              "$UI_DIR"/*|deploy/*|.github/*)
+                echo "Not allowed on a variant branch: $f" >&2; bad=1 ;;
+            esac
+          done < <(git diff --name-only origin/main...HEAD)
+
+          [ "$bad" -eq 0 ] || { echo "Change common files on develop/main and let the sync PR bring them in." >&2; exit 1; }
+          echo "Guard passed for variant '$variant'."

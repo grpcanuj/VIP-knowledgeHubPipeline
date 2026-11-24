@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CV07_01 Onboarding Methodology</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f6f8fa;
+  --text: #1b1f24;
+  --text-muted: #57606a;
+  --border: #d8dee4;
+  --accent: #0b3d66;
+  --accent-2: #0e7c86;
+  --code-bg: #f6f8fa;
+  --blocking: #b42318;
+  --blocking-bg: #fdecea;
+  --advisory: #9a6700;
+  --advisory-bg: #fff8e6;
+  --info: #0b3d66;
+  --info-bg: #eaf2fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181f;
+    --bg-alt: #1b212b;
+    --text: #e6edf3;
+    --text-muted: #9aa7b2;
+    --border: #2d3540;
+    --accent: #7db2e8;
+    --accent-2: #5fc3cf;
+    --code-bg: #1b212b;
+    --blocking: #ff8c82;
+    --blocking-bg: #3a1b18;
+    --advisory: #e3b341;
+    --advisory-bg: #3a2f10;
+    --info: #7db2e8;
+    --info-bg: #142433;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+.masthead {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+}
+.masthead .kicker {
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.masthead h1 {
+  margin: 6px 0 4px;
+  font-size: 1.9rem;
+  color: var(--accent);
+}
+.masthead .meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+h1, h2, h3, h4 { color: var(--accent); scroll-margin-top: 20px; }
+h2 {
+  margin-top: 2.4em;
+  padding-top: 0.4em;
+  border-top: 1px solid var(--border);
+  font-size: 1.35rem;
+}
+h3 { font-size: 1.1rem; color: var(--accent-2); }
+p, li { font-size: 0.98rem; }
+a { color: var(--accent-2); }
+code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code { background: none; border: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 0.92rem; }
+th { background: var(--bg-alt); }
+blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--accent-2);
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border-radius: 0 6px 6px 0;
+}
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+.toc {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 24px 0 36px;
+}
+.toc > strong { display: block; margin-bottom: 8px; font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.toc ul { margin: 0; padding-left: 1.2em; columns: 1; }
+.toc li { font-size: 0.92rem; margin: 4px 0; }
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.badge-blocking { color: var(--blocking); background: var(--blocking-bg); }
+.badge-advisory { color: var(--advisory); background: var(--advisory-bg); }
+.badge-informational { color: var(--info); background: var(--info-bg); }
+footer {
+  margin-top: 4em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+</style>
+<style>pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #ffffcc }
+.codehilite { background: #f8f8f8; }
+.codehilite .c { color: #3D7B7B; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #F00 } /* Error */
+.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666 } /* Operator */
+.codehilite .ch { color: #3D7B7B; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #3D7B7B; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #9C6500 } /* Comment.Preproc */
+.codehilite .cpf { color: #3D7B7B; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #3D7B7B; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #3D7B7B; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #E40000 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #008400 } /* Generic.Inserted */
+.codehilite .go { color: #717171 } /* Generic.Output */
+.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #04D } /* Generic.Traceback */
+.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
+.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #B00040 } /* Keyword.Type */
+.codehilite .m { color: #666 } /* Literal.Number */
+.codehilite .s { color: #BA2121 } /* Literal.String */
+.codehilite .na { color: #687822 } /* Name.Attribute */
+.codehilite .nb { color: #008000 } /* Name.Builtin */
+.codehilite .nc { color: #00F; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #800 } /* Name.Constant */
+.codehilite .nd { color: #A2F } /* Name.Decorator */
+.codehilite .ni { color: #717171; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #CB3F38; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #00F } /* Name.Function */
+.codehilite .nl { color: #767600 } /* Name.Label */
+.codehilite .nn { color: #00F; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #19177C } /* Name.Variable */
+.codehilite .ow { color: #A2F; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #BBB } /* Text.Whitespace */
+.codehilite .mb { color: #666 } /* Literal.Number.Bin */
+.codehilite .mf { color: #666 } /* Literal.Number.Float */
+.codehilite .mh { color: #666 } /* Literal.Number.Hex */
+.codehilite .mi { color: #666 } /* Literal.Number.Integer */
+.codehilite .mo { color: #666 } /* Literal.Number.Oct */
+.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
+.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
+.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
+.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
+.codehilite .se { color: #AA5D1F; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.codehilite .si { color: #A45A77; font-weight: bold } /* Literal.String.Interpol */
+.codehilite .sx { color: #008000 } /* Literal.String.Other */
+.codehilite .sr { color: #A45A77 } /* Literal.String.Regex */
+.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
+.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
+.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #00F } /* Name.Function.Magic */
+.codehilite .vc { color: #19177C } /* Name.Variable.Class */
+.codehilite .vg { color: #19177C } /* Name.Variable.Global */
+.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
+.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
+.codehilite .il { color: #666 } /* Literal.Number.Integer.Long */
+.codehilite { background: var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; }</style></head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="kicker">Groupe CAT VIP — Integration Knowledge Hub</div>
+    <h1>CV07_01 Onboarding Methodology</h1>
+    <div class="meta">How the Knowledge Hub build pipeline turns an Andsoft Word template into validated glossary, flow, and OpenAPI deliverables</div>
+  </div>
+  <div class="toc"><strong>Contents</strong><div class="toc">
+<ul>
+<li><a href="#tower-1-integration-knowledge-hub-from-andsoft-word-templates-to-a-real-configuration-driven-tool">Tower 1 — Integration Knowledge Hub: from Andsoft Word templates to a real, configuration-driven tool</a><ul>
+<li><a href="#the-problem-this-solves">The problem this solves</a></li>
+<li><a href="#the-seven-stages">The seven stages</a><ul>
+<li><a href="#stage-1-extract-automatic-seconds-per-interface">Stage 1 — Extract (automatic, seconds per interface)</a></li>
+<li><a href="#stage-15-lint-automatic-document-quality-gate">Stage 1.5 — Lint (automatic, document-quality gate)</a></li>
+<li><a href="#stage-2-review-human-minutes-per-interface-not-hours">Stage 2 — Review (human, minutes per interface — not hours)</a></li>
+<li><a href="#stage-3-validate-automatic-ci-gate">Stage 3 — Validate (automatic, CI gate)</a></li>
+<li><a href="#stage-4-compile-automatic">Stage 4 — Compile (automatic)</a></li>
+<li><a href="#stage-4b-generate-openapi-automatic-the-actual-swagger-deliverable-andsoft-intended-to-supply">Stage 4b — Generate OpenAPI (automatic — the actual Swagger deliverable Andsoft intended to supply)</a></li>
+<li><a href="#stage-5-publish-no-code-change-just-a-rebuild">Stage 5 — Publish (no code change, just a rebuild)</a></li>
+</ul>
+</li>
+<li><a href="#what-this-means-for-interfaces-2-through-100">What this means for interfaces #2 through #100+</a></li>
+<li><a href="#known-open-items-flagged-not-hidden">Known open items (flagged, not hidden)</a></li>
+<li><a href="#files-delivered">Files delivered</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+  <h1 id="tower-1-integration-knowledge-hub-from-andsoft-word-templates-to-a-real-configuration-driven-tool">Tower 1 — Integration Knowledge Hub: from Andsoft Word templates to a real, configuration-driven tool</h1>
+<h2 id="the-problem-this-solves">The problem this solves</h2>
+<p>Andsoft owns the design and build of every interface, but isn't ready with Swagger/OpenAPI. What they can give us today is one Word document per interface (a "Technical Analysis" template) describing the endpoint and a nested field-mapping table. The Knowledge Hub cannot wait for Swagger, and it also cannot be rebuilt by hand for every one of the 100+ interfaces still to come — the whole point of calling it "configuration-driven" is that interface #2 onward must be materially faster than interface #1.</p>
+<p>This was solved by building a real pipeline, not a one-off walkthrough, and proving it end-to-end against the one real document provided (<code>CV07_01_TMS_2_SHIP_ORDERS.docx</code> — TMS → Shippeo, Create/Update/Cancel a transport order, PLN/APLN). Everything described below actually ran against that file; the numbers quoted are the real output, not illustrative ones.</p>
+<h2 id="the-seven-stages">The seven stages</h2>
+<div class="codehilite"><pre><span></span><code>Andsoft .docx → 1. Extract → 1.5 Lint → 2. Review → 3. Validate → 4. Compile → 5. Publish
+                                                                        ↘ 4b. Generate OpenAPI
+</code></pre></div>
+
+<p>Stage 4 now branches: the same validated YAML compiles into both the React app's data file (4) and a real, validated OpenAPI 3.0.3 spec per interface (4b) — see its own section below.</p>
+<h3 id="stage-1-extract-automatic-seconds-per-interface">Stage 1 — Extract (automatic, seconds per interface)</h3>
+<p><code>scripts/extract_interface_from_docx.py &lt;docx&gt; --id &lt;ID&gt; --name &lt;NAME&gt; --out-dir domains/&lt;domain&gt;</code></p>
+<p>Reads the document by <strong>heading and table-header text</strong>, not fixed row/column positions, so it tolerates the normal drift between Andsoft's templates:</p>
+<ul>
+<li>The Overview section → source system, target system, flow direction, description.</li>
+<li>The endpoint table (Purpose / Direction / Method / URL / Idempotent / Side effects) → protocol, method, URL, retry policy.</li>
+<li>The nested field-mapping table (the one with a <code>Rank</code> column going 0→4) → every <strong>leaf</strong> field, walking the rank column as a nesting stack so each field gets its full JSON path (e.g. <code>shipment.orders[].pickUp.dates[].dateTime</code>). Container rows (<code>object</code>/<code>array</code> types) are not turned into fields — only scalars are, because a glossary field is a business term, not a structural node.</li>
+<li>Any <code>Fixed value: X</code> called out in a row's description is captured as a constant, and the vendor's own source-column name (the "Field AndSoft" column) is preserved for traceability back to the document.</li>
+<li>Rows where the AndSoft source column is <code>?</code> or blank are flagged for review rather than silently guessed at.</li>
+</ul>
+<p><strong>Run on CV07_01:</strong> 99 payload leaf occurrences → 80 unique glossary fields, 16 flagged for review (all genuine <code>?</code>/TBD gaps in Andsoft's own document, not extraction failures). Output: <code>fields.draft.yaml</code>, <code>interfaces.draft.yaml</code>, <code>REVIEW_REPORT.md</code>.</p>
+<p>One real wrinkle the script had to handle and now handles for every future interface too: generic wrapper names (<code>dates</code>, <code>identifications</code>, <code>tags</code>, <code>attributes</code>, <code>references</code>, <code>items</code>...) repeat under different parents — <code>pickUp.dates[].dateTime</code> and <code>consignee.dates[].dateTime</code> both have the immediate parent <code>dates</code>. A naive "parent + leaf name" field ID would have silently collapsed these two genuinely different fields into one. The script detects that specific collision (same parent+leaf reached via a different ancestor chain) and automatically escalates just those to a two-level name (<code>pickup-dates-datetime</code> / <code>consignee-dates-datetime</code>), leaving the simple one-level names (<code>consignor-name</code>, <code>pickup-city</code>, ...) untouched everywhere there's no ambiguity.</p>
+<h3 id="stage-15-lint-automatic-document-quality-gate">Stage 1.5 — Lint (automatic, document-quality gate)</h3>
+<p><code>scripts/lint_source_document.py &lt;docx&gt; --out-dir domains/&lt;domain&gt;</code> runs right after extraction and checks the <strong>vendor document's own internal consistency and completeness</strong> — distinct from Stage 1's review report, which only flags fields with no source-column mapping. This is the "OpenAPI/Swagger-lint equivalent" for a Word-template input: since Andsoft's documents aren't machine-readable specs yet, this substitutes for the kind of schema-linting that would normally be automatic. It writes <code>DOC_QUALITY_REPORT.md</code>, with findings in three tiers:</p>
+<ul>
+<li><strong>Blocking</strong> — must be resolved with Andsoft before this interface is built against (missing source mappings, a genuine copy-paste duplicate row, an unfinished "TBD" endpoint URL).</li>
+<li><strong>Advisory</strong> — probably fine, worth a second look (a fixed value that disagrees with its own source column; an exactly-repeated row that's redundant but not wrong).</li>
+<li><strong>Informational</strong> — judgement calls to confirm, not necessarily problems (the same generic attribute name — <code>name</code>, <code>city</code>, <code>dateTime</code>, <code>identifier</code>...— recurring under different parent objects; confirm each is genuinely a distinct business concept rather than a copy-paste artifact).</li>
+</ul>
+<p><strong>Run on CV07_01:</strong> 13 blocking, 3 advisory, 21 informational. One real bug surfaced and got fixed while building this: a repeatable array slot (<code>attributes.name</code>/<code>value</code>, documented via 4 example rows with 4 different values — <code>carrier_code</code>, <code>origin_location_code</code>, <code>destination_location_code</code>, <code>client</code>) was initially having 3 of its 4 values silently dropped by the extraction script, which only kept the first occurrence. Fixed so that when the same field_id recurs with different fixed values, they're now aggregated into that field's <code>allowed_values</code> and the field is promoted to <code>data_type: enum</code> — nothing is silently lost anymore. A second, subtler case (<code>tags.label</code>, which repeats under one generic name for four <em>unrelated</em> meanings with no fixed value to tell them apart) is now preserved too — all four meanings are kept in the field's description, with a quality-rule flag recommending Andsoft consider separate named fields instead.</p>
+<p>The same rule set that <code>lint_source_document.py</code> encodes is written up in plain language in <code>VENDOR_DOCUMENTATION_STANDARD.md</code> — a one-page guideline for Andsoft to follow on future interface documents, covering: every field needs a source mapping or a stated fixed value; a fixed value shouldn't contradict its own source column; field names should be camelCase per their own stated convention; a generic attribute name reused for unrelated meanings should get a specific description per occurrence (or ideally a dedicated field); a repeatable array shape is best described once with a table of known values rather than one full row per example; every field needs a real description; endpoint URLs need to be finalized before cutover; and the Rank column should stay numerically consistent. The two documents are deliberately kept in lockstep — the checks ARE the standard, just expressed as code in one place and prose in the other.</p>
+<h3 id="stage-2-review-human-minutes-per-interface-not-hours">Stage 2 — Review (human, minutes per interface — not hours)</h3>
+<p>The reviewer's judgement calls are not 80 individual hand-edits. They're expressed as a short rule list in <code>scripts/promote_cv07_draft.py</code> — e.g. "these field_ids are protocol constants → sensitivity: public", "these carry a tax ID → sensitivity: confidential", "these two are conditional, not mandatory, per Business Rule BR-01." For CV07_01 that list was 4 rules covering all 80 fields. For interface #2, it's a new short list tailored to that interface's own quirks — still minutes, not a re-type of the whole table.</p>
+<p>Running it promotes <code>*.draft.yaml</code> → <code>fields.yaml</code> / <code>interfaces.yaml</code> (the files the next stage actually reads).</p>
+<h3 id="stage-3-validate-automatic-ci-gate">Stage 3 — Validate (automatic, CI gate)</h3>
+<p><code>scripts/validate_all.py</code> is the generalized replacement for the old <code>validate_oms_tms_examples.py</code> (which hardcoded one domain's filenames). It now globs every folder under <code>domains/</code>, so it keeps working unchanged as domain #2, #3, ... #100+ are added. It checks, across <strong>all</strong> domains combined:</p>
+<ol>
+<li>Every field / interface / flow record validates against its JSON Schema (<code>field.schema.json</code>, the newly-written <code>interface.schema.json</code>, <code>flow.schema.json</code>).</li>
+<li>Every interface's <code>field_id</code> reference resolves to a field defined somewhere.</li>
+<li>Every flow's <code>interface_id</code> reference resolves to an interface defined somewhere.</li>
+<li>No <code>field_id</code> or interface <code>id</code> is defined twice across domains.</li>
+</ol>
+<p>Run against the combined set (existing <code>oms_tms_planification</code> domain + new <code>cv07_shippeo</code> domain): <strong>PASSED — 91 fields, 4 interfaces, 2 flows, zero errors.</strong> This is the gate a pull request has to clear before anything merges — exactly the CI check the Full Stack Developer JD already commits to building.</p>
+<p>A schema was missing before this: <code>interface.schema.json</code> didn't exist on disk even though the old validator already imported it. It's been written now (and copied back to your outputs folder), extended with a few optional fields the IF-101-style examples didn't need but a deeply-nested vendor payload does: <code>path</code> (the JSON path), <code>fixed_value</code>, <code>source_field</code> (the vendor's own column name, for traceability), and <code>io</code> (request/response leg).</p>
+<h3 id="stage-4-compile-automatic">Stage 4 — Compile (automatic)</h3>
+<p><code>scripts/compile_knowledge_hub.py</code> is the actual "static-site compile pipeline that turns validated YAML into the Glossary, Interface Index, Flow Diagram, and Traceability pages" that the Full Stack Developer JD describes. It:</p>
+<ul>
+<li>Refuses to run if Stage 3 found errors (compiling broken cross-references into the UI is worse than refusing to build).</li>
+<li>Reads every <code>domains/*/{fields,interfaces,flows}.yaml</code>.</li>
+<li>Emits one generated file, <code>exampleData.js</code>, in <strong>exactly</strong> the shape the four page components already import (<code>FIELDS</code>, <code>INTERFACES</code>, <code>FLOWS</code>, <code>REQUIREMENTS</code>, <code>getField()</code>, <code>getInterface()</code>, <code>getRequirement()</code>) — so <strong>zero lines change</strong> in <code>GlossaryPage.jsx</code>, <code>InterfaceIndexPage.jsx</code>, <code>FlowViewPage.jsx</code>, or <code>TraceabilityPage.jsx</code>. Only where that data module comes from changes: from a developer hand-typing demo rows, to this script.</li>
+<li>Generates each flow's Mermaid diagram from its <code>steps</code> array rather than anyone hand-drawing it (exactly the intent already written as a comment in the existing <code>flows_oms_tms_planification.yaml</code>).</li>
+<li>Deliberately leaves <code>REQUIREMENTS</code> empty with an explanatory comment rather than fabricating test-evidence rows: that data is Tower 2's system of record (its own test-execution views), and Tower 1 should hold only a thin pointer/status, refreshed from Tower 2's API or event feed — not redefined here. That's the same system-of-record boundary already agreed for the Traceability view.</li>
+</ul>
+<h3 id="stage-4b-generate-openapi-automatic-the-actual-swagger-deliverable-andsoft-intended-to-supply">Stage 4b — Generate OpenAPI (automatic — the actual Swagger deliverable Andsoft intended to supply)</h3>
+<p><code>scripts/generate_openapi.py --domains-dir domains --out-dir output/openapi</code> reads the same validated <code>fields.yaml</code>/<code>interfaces.yaml</code> Stage 4 reads, and produces a real OpenAPI 3.0.3 spec per interface (<code>&lt;id&gt;.openapi.yaml</code> and <code>.json</code>) — structurally validated with <code>openapi_spec_validator</code> before it's written to disk; the script refuses to write a spec that fails validation rather than ship something broken.</p>
+<p>The hard part is reconstructing the real nested JSON shape from a flat list of fields. Each field's <code>path</code> (e.g. <code>shipment.orders[].pickUp.dates[].dateTime</code>) is walked segment by segment — <code>[]</code> means "this level is an array of objects," anything else is a plain object — to rebuild the exact nesting, with every leaf's data type, format, max length, allowed values and example value filled in from its glossary entry.</p>
+<p>This is only correct because of a fix made upstream, in Stage 1: the vendor document's own "Type" column (object vs. array) turned out to disagree with its own worked JSON example for <strong>9 of CV07_01's 25 nested containers</strong> — e.g. <code>consignor</code>/<code>customer</code>/<code>carrier</code>/<code>consignmentNote</code>/<code>documentProperties</code> are typed "array" in the table but shown as plain objects in the example; <code>attributes</code>/<code>tags</code>/<code>items</code>/<code>handlingUnits</code> are typed "object" but shown as arrays. Trusting the Type column alone would have produced a structurally wrong OpenAPI spec. The pipeline now parses the document's own worked example and uses it as ground truth, correcting each field's stored <code>path</code> before anything downstream (OpenAPI generation, and in principle any future direct build) ever sees it. The disagreement itself is also now a dedicated lint rule (<code>structure-type-vs-example-mismatch</code>) worth raising with Andsoft.</p>
+<p>A second, smaller defect surfaced the same way: the endpoint URL itself contains a literal space (<code>https://TBD/api/v1/ tms-2-ship-orders/{orderId}</code>) baked into the vendor document — now its own lint rule (<code>structure-url-whitespace</code>) rather than something that would have silently broken a generated client.</p>
+<p><strong>Run on CV07_01:</strong> a request schema with the full real nesting — arrays correctly wrapping <code>pickUp.dates</code>, <code>attributes</code>, <code>tags</code>, <code>items</code>, <code>handlingUnits</code>, <code>references</code>, etc.; objects correctly <em>not</em> wrapped for <code>consignor</code>/<code>customer</code>/<code>carrier</code>; the repeated-array-instance fields from Stage 1.5 correctly rendered as <code>enum</code> (e.g. <code>attributes.name: [carrier_code, origin_location_code, destination_location_code, client]</code>); and a <code>responses:</code> block built from the document's own HTTP Status Codes table (202 Accepted / 520 Server error, with their actual descriptions) rather than invented placeholders, since CV07_01 has no structured JSON response body. The same script ran against the two pre-existing, simpler IF-101/IF-102/IF-103 examples too — it handles both a deeply nested, path-based interface and a flat, no-path one without needing separate code paths.</p>
+<p>This is a compile step, not a one-off: once a new interface's <code>fields.yaml</code>/<code>interfaces.yaml</code> exist and pass Stage 3's validation, <code>generate_openapi.py</code> produces its spec with no additional manual work — exactly the "second and further 100+ interfaces take less time" requirement, now extended to the Swagger deliverable itself, not just the Knowledge Hub's internal data.</p>
+<h3 id="stage-5-publish-no-code-change-just-a-rebuild">Stage 5 — Publish (no code change, just a rebuild)</h3>
+<p>The generated file replaces <code>src/data/exampleData.js</code>, <code>npm run build</code> runs, and the production bundle now contains the real CV07_01 data — confirmed by grepping the built bundle for <code>CV07_01</code> and for the two collision-resolved field IDs (<code>pickup-dates-datetime</code>, <code>consignee-dates-datetime</code>), both present. No React component was touched.</p>
+<h2 id="what-this-means-for-interfaces-2-through-100">What this means for interfaces #2 through #100+</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Interface #1 (CV07_01, this run)</th>
+<th>Interface #2 onward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extraction</td>
+<td>Built the script itself + ran it</td>
+<td>Run the existing script (seconds)</td>
+</tr>
+<tr>
+<td>Review</td>
+<td>Wrote the first rule-list format + applied it</td>
+<td>Write a short, interface-specific rule list (minutes)</td>
+</tr>
+<tr>
+<td>Validate / Compile</td>
+<td>Built both scripts + ran them</td>
+<td>Run the existing scripts (seconds)</td>
+</tr>
+<tr>
+<td>Net new engineering per interface</td>
+<td>None — this was the one-time cost</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p>The work that doesn't scale down is the one-time pipeline build, which is now done. What's left per interface is: get the vendor's Word doc, run the extractor, spend a few minutes writing/adjusting the review rules for anything genuinely interface-specific, run validate+compile. That is the "second and further 100+ interfaces take less time" requirement.</p>
+<h2 id="known-open-items-flagged-not-hidden">Known open items (flagged, not hidden)</h2>
+<ul>
+<li><strong>16 fields on CV07_01 are genuinely incomplete in Andsoft's own document</strong> (shown as <code>?</code> or without a source column) — these need an answer from Andsoft, not an engineering fix. See <code>REVIEW_REPORT.md</code>.</li>
+<li><strong>Swagger migration path</strong>: when Andsoft does publish OpenAPI specs, <code>spec_type</code> flips from <code>vendor-template</code> to <code>OpenAPI</code> and <code>hasOwnSpec</code> becomes true — the data model already has a field for this, nothing structural changes.</li>
+<li><strong>Flows and Requirements are out of scope for this extraction.</strong> Flows are designed by the architecture team (not read from a vendor interface doc) and Requirements/test evidence belong to Tower 2. The compiler already reflects that boundary rather than papering over it.</li>
+<li><strong>The field.schema.json enum doesn't model structural object/array container nodes</strong> — by design (a glossary field is a business term, a container is structure). The container nesting isn't lost though: it's preserved on every leaf field via <code>path</code>.</li>
+</ul>
+<h2 id="files-delivered">Files delivered</h2>
+<ul>
+<li><code>interface.schema.json</code> — the schema the old validator already expected but that didn't exist on disk yet.</li>
+<li><code>Knowledge_Hub_Build_Pipeline.zip</code> — schemas, both domains (existing <code>oms_tms_planification</code> + new <code>cv07_shippeo</code>), all four scripts, the compiled output, and the source Word document.</li>
+<li><code>Tower1_Integration_Knowledge_Hub_React_v2_CV07_01.zip</code> — the same React app, rebuilt with the real compiled data wired in (original hand-typed demo file kept alongside as <code>exampleData.manual_demo.js.bak</code> for comparison).</li>
+</ul>
+  <footer>Generated from <code>CV07_01_Onboarding_Methodology.md</code> for the Groupe CAT VIP — Integration Knowledge Hub build.</footer>
+</div>
+</body>
+</html>

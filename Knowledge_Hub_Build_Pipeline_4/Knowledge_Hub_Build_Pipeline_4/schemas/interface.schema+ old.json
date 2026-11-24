@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Interface",
+  "description": "One interface definition, as recorded in the Knowledge Hub. References fields by field_id rather than redefining them. This is the schema validate_oms_tms_examples.py already expected but that had not yet been written to disk.",
+  "type": "object",
+  "required": ["id", "name", "source_system", "target_system", "owner", "status", "fields"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-?[0-9]{2,4}(_[0-9]{2})?$",
+      "description": "Unique interface key. Matches either the legacy IF-### convention (IF-101) or an Andsoft-vendor convention carried through as-is (CV07_01)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable interface name, e.g. 'CV07_01_TMS_SHIP_ORDERS'"
+    },
+    "description": { "type": "string" },
+    "source_system": { "type": "string" },
+    "target_system": { "type": "string" },
+    "protocol": {
+      "type": "string",
+      "description": "Transport protocol, e.g. REST, MQ, SFTP, Webhook"
+    },
+    "method": {
+      "type": "string",
+      "description": "HTTP method where applicable, e.g. POST"
+    },
+    "endpoint_url": {
+      "type": "string",
+      "description": "URL or TBD placeholder as supplied by the vendor"
+    },
+    "frequency": { "type": "string" },
+    "owner": {
+      "type": "string",
+      "description": "Vendor/team accountable for building and maintaining this interface (e.g. AndSoft)"
+    },
+    "spec_type": {
+      "type": "string",
+      "enum": ["OpenAPI", "AsyncAPI", "WSDL", "vendor-template", "none"],
+      "description": "What kind of spec backs this entry. 'vendor-template' marks an interface documented via a vendor Word template rather than a machine-readable spec (Swagger not yet available)."
+    },
+    "spec_version": { "type": "string" },
+    "external_spec_url": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["planned", "documented", "in-build", "target", "transitional", "retired"]
+    },
+    "idempotent": { "type": "boolean" },
+    "retry_policy": { "type": "string" },
+    "response_contract": {
+      "type": "string",
+      "description": "Short note on the response shape, e.g. 'status-code only, no structured body'"
+    },
+    "response_status_codes": {
+      "type": "array",
+      "description": "HTTP status codes this interface's response can return, per the vendor document's own status-code table - used to generate a correct OpenAPI `responses:` block even when there's no structured JSON response body.",
+      "items": {
+        "type": "object",
+        "required": ["code", "meaning"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[0-9]{3}$" },
+          "meaning": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "required_headers": {
+      "type": "array",
+      "description": "HTTP headers the vendor document's own headers/auth table calls for (e.g. Content-Type, Authorization, X-API-Key), carried through verbatim so an ambiguous or missing authentication mechanism is visible rather than silently dropped.",
+      "items": {
+        "type": "object",
+        "required": ["header"],
+        "properties": {
+          "header": { "type": "string" },
+          "value": { "type": "string" },
+          "notes": { "type": "string" },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "field_validation_rules": {
+      "type": "array",
+      "description": "Per-field (or per-field-group) validation rules from the vendor document's own Field/Rule/Error-code table - format constraints, error codes, and the exact business condition that triggers them.",
+      "items": {
+        "type": "object",
+        "required": ["rule"],
+        "properties": {
+          "field": { "type": "string", "description": "Field name(s) as named in the vendor document - may be a comma-separated business-language list, not necessarily matching a single field_id" },
+          "rule": { "type": "string" },
+          "error_code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "business_rules": {
+      "type": "array",
+      "description": "The vendor document's own numbered business rules (e.g. BR-01) describing cross-field behaviour - when a create vs. update vs. cancel is triggered, conditional-mandatory field sets, etc. Carried as freeform text rather than modelled as fields, since these are rules about the interaction of several fields, not a single field's own definition.",
+      "items": {
+        "type": "object",
+        "required": ["rule"],
+        "properties": {
+          "id": { "type": "string", "description": "e.g. BR-01" },
+          "rule": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field_id", "required"],
+        "properties": {
+          "field_id": { "type": "string" },
+          "required": { "type": "boolean" },
+          "io": {
+            "type": "string",
+            "enum": ["request", "response"],
+            "default": "request",
+            "description": "Which leg of the interface this field belongs to"
+          },
+          "path": {
+            "type": "string",
+            "description": "Dotted/bracket JSON path within the payload, e.g. shipment.orders[].pickUp.name"
+          },
+          "fixed_value": {
+            "type": "string",
+            "description": "Set when the vendor doc specifies a constant, e.g. 'ZZ' or 'CAT2020'"
+          },
+          "source_field": {
+            "type": "string",
+            "description": "The vendor's own source-system column name for this field, e.g. AndSoft's TMADLOCNAME, kept verbatim for traceability back to the vendor document"
+          }
+        }
+      }
+    }
+  }
+}

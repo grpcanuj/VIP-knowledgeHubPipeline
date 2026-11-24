@@ -1,0 +1,66 @@
+name: sync-variants
+
+# Merges main into every variant/* branch through a reviewable PR.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sync:
+    runs-on: [self-hosted, windows, knowledge-hub]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # A PAT or GitHub App token is required so the PRs created here trigger Build and the guard.
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Open a sync PR per variant
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          git config user.name "knowledge-hub-sync"
+          git config user.email "knowledge-hub-sync@users.noreply.github.com"
+
+          for b in $(git for-each-ref refs/remotes/origin/variant --format='%(refname:strip=3)'); do
+            name="${b#variant/}"
+            sync="sync/${name}"
+
+            if git merge-base --is-ancestor origin/main "origin/${b}"; then
+              echo "${b}: already up to date"; continue
+            fi
+
+            git checkout -q -B "$sync" "origin/${b}"
+            if ! git merge --no-edit origin/main; then
+              git merge --abort
+              gh issue create --title "Sync main into ${b} has conflicts" \
+                --body "Merge origin/main into ${b} locally, resolve the conflicts and push to a sync/${name} branch." || true
+              continue
+            fi
+
+            {
+              echo "Automatic merge of main into ${b}."
+              echo
+              echo "Drift of this variant from main (should stay small):"
+              echo '```'
+              git diff --stat origin/main "origin/${b}" | tail -n 25
+              echo '```'
+            } > "$RUNNER_TEMP/body.md"
+
+            git push --force origin "$sync"
+            if [ -z "$(gh pr list --head "$sync" --base "$b" --json number --jq '.[0].number')" ]; then
+              gh pr create --head "$sync" --base "$b" --title "Sync main into ${b}" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          done

@@ -1,0 +1,110 @@
+# Domain: OMS Order / TMS Planification
+# Each field is defined once here and referenced by field_id from interfaces.yaml —
+# never redefined per interface.
+
+fields:
+
+  - field_id: order-id
+    name: Order ID
+    description: Unique identifier for a transport order, assigned by OMS at creation.
+    data_type: string
+    format: "ORD-{10 digits}"
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+    quality_rules:
+      - "Must be unique across the OMS order table"
+      - "Must not be null once order status is past 'draft'"
+
+  - field_id: order-status
+    name: Order Status
+    description: Current lifecycle state of the order as tracked across OMS and TMS.
+    data_type: enum
+    allowed_values: [draft, created, planned, in-transit, delivered, cancelled]
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+    quality_rules:
+      - "Must only transition along the defined order-status state machine (see FLOW-101)"
+
+  - field_id: order-date
+    name: Order Date
+    description: Date and time the order was created in OMS.
+    data_type: datetime
+    format: ISO-8601
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+
+  - field_id: customer-code
+    name: Customer Code
+    description: Unique code identifying the customer/consignee for the order.
+    data_type: string
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: confidential
+    quality_rules:
+      - "Must exist in the master customer reference data before an order can reference it"
+
+  - field_id: origin-site
+    name: Origin Site
+    description: Site code where the vehicles are picked up.
+    data_type: string
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+
+  - field_id: destination-site
+    name: Destination Site
+    description: Site code where the vehicles are to be delivered.
+    data_type: string
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+
+  - field_id: vehicle-type
+    name: Vehicle Type
+    description: Category of vehicle covered by the order.
+    data_type: enum
+    allowed_values: [new-vehicle, used-vehicle, spare-parts, motorbike, agri-equipment]
+    status: mandatory
+    source_system: AndSoft OMS
+    sensitivity: internal
+
+  - field_id: order-priority
+    name: Order Priority
+    description: Business priority flag used by TMS planification to sequence transport.
+    data_type: enum
+    allowed_values: [standard, urgent, critical]
+    status: conditional
+    source_system: AndSoft OMS
+    sensitivity: internal
+    quality_rules:
+      - "Defaults to 'standard' when not supplied by OMS"
+
+  - field_id: planned-transport-date
+    name: Planned Transport Date
+    description: Date TMS's planification engine schedules the transport to occur.
+    data_type: date
+    format: ISO-8601
+    status: mandatory
+    source_system: AndSoft TMS
+    sensitivity: internal
+
+  - field_id: transport-mode
+    name: Transport Mode
+    description: Mode of transport assigned by TMS planification.
+    data_type: enum
+    allowed_values: [road, rail, short-sea]
+    status: mandatory
+    source_system: AndSoft TMS
+    sensitivity: internal
+
+  - field_id: planification-status
+    name: Planification Status
+    description: Status of the transport plan as produced by TMS's planification engine.
+    data_type: enum
+    allowed_values: [pending, planned, re-planned, plan-failed]
+    status: mandatory
+    source_system: AndSoft TMS
+    sensitivity: internal

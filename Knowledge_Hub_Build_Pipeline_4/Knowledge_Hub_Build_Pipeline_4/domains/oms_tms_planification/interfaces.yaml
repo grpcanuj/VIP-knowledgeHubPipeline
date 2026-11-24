@@ -1,0 +1,73 @@
+# Domain: OMS Order / TMS Planification
+# One file per domain, reviewed together in a single pull request.
+# Each interface references field_ids already defined in
+# fields_oms_tms_planification.yaml — not redefined here.
+
+interfaces:
+
+  - id: IF-101
+    name: OMS to TMS Order Create
+    source_system: AndSoft OMS
+    target_system: AndSoft TMS
+    protocol: REST
+    frequency: near-real-time
+    owner: AndSoft
+    spec_type: OpenAPI
+    spec_version: "1.0"
+    external_spec_url: https://api-docs.andsoft.internal/oms/v1.0/order-create
+    status: in-build
+    fields:
+      - field_id: order-id
+        required: true
+      - field_id: order-status
+        required: true
+      - field_id: order-date
+        required: true
+      - field_id: customer-code
+        required: true
+      - field_id: origin-site
+        required: true
+      - field_id: destination-site
+        required: true
+      - field_id: vehicle-type
+        required: true
+      - field_id: order-priority
+        required: false
+
+  - id: IF-102
+    name: TMS Planification Confirmation
+    source_system: AndSoft TMS
+    target_system: AndSoft OMS
+    protocol: REST
+    frequency: near-real-time
+    owner: AndSoft
+    spec_type: OpenAPI
+    spec_version: "1.0"
+    external_spec_url: https://api-docs.andsoft.internal/tms/v1.0/planification-confirmation
+    status: in-build
+    fields:
+      - field_id: order-id
+        required: true
+      - field_id: planned-transport-date
+        required: true
+      - field_id: transport-mode
+        required: true
+      - field_id: planification-status
+        required: true
+
+  - id: IF-103
+    name: TMS Planification Status Update
+    source_system: AndSoft TMS
+    target_system: AndSoft OMS
+    protocol: MQ
+    frequency: real-time
+    owner: AndSoft
+    spec_type: none
+    status: planned
+    fields:
+      - field_id: order-id
+        required: true
+      - field_id: planification-status
+        required: true
+      - field_id: order-status
+        required: true

@@ -1,0 +1,29 @@
+name: build
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  # Folder on the VM that holds the vendor .docx files. Override with the DOCS_DIR repository variable.
+  DOCS_DIR: ${{ vars.DOCS_DIR || 'C:\knowledge-hub\docs' }}
+
+jobs:
+  build:
+    # Windows VM runner; needs git, python 3 and Node 22+ on PATH.
+    runs-on: [self-hosted, windows, knowledge-hub]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pipeline stages and UI build
+        shell: powershell
+        run: .\deploy\windows\build.ps1 -RepoRoot "$env:GITHUB_WORKSPACE" -DocsDir "$env:DOCS_DIR"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: Knowledge_Hub_Build_Pipeline_4/Knowledge Hub Tool/dist
+          if-no-files-found: error
+          retention-days: 30

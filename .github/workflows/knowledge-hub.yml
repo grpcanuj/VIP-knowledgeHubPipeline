@@ -1,0 +1,51 @@
+name: knowledge-hub
+
+# Identical on every branch (main, develop, variant/*). Do not edit it on a variant branch.
+on:
+  pull_request:
+  push:
+    branches: [develop, main, "variant/**"]
+    tags: ["uat/*/v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: knowledge-hub-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    runs-on: [self-hosted, windows, knowledge-hub]
+    outputs:
+      variant: ${{ steps.resolve.outputs.variant }}
+      env: ${{ steps.resolve.outputs.env }}
+    steps:
+      - id: resolve
+        shell: powershell
+        run: |
+          $v = ""; $e = ""
+          $ref = $env:GITHUB_REF
+          if ($ref -eq "refs/heads/develop") { $v = "default"; $e = "dev" }
+          elseif ($ref -eq "refs/heads/main") { $v = "default"; $e = "uat" }
+          elseif ($ref -like "refs/heads/variant/*") { $v = $ref.Substring("refs/heads/variant/".Length); $e = "dev" }
+          elseif ($ref -like "refs/tags/uat/*/v*") { $v = ($ref.Substring("refs/tags/uat/".Length) -split "/")[0]; $e = "uat" }
+          if ($env:GITHUB_EVENT_NAME -eq "pull_request") { $v = ""; $e = "" }
+          if ($v -and $v -notmatch '^[a-z0-9_-]+$') { throw "Invalid variant name: $v" }
+          Add-Content -Encoding ascii -Path $env:GITHUB_OUTPUT -Value "variant=$v"
+          Add-Content -Encoding ascii -Path $env:GITHUB_OUTPUT -Value "env=$e"
+          Write-Host "Target: env='$e' variant='$v'"
+
+  build:
+    # Fork PRs must never execute on the self-hosted VM.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/_build.yml
+
+  deploy:
+    needs: [target, build]
+    if: needs.target.outputs.env != ''
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      env_name: ${{ needs.target.outputs.env }}
+      variant: ${{ needs.target.outputs.variant }}

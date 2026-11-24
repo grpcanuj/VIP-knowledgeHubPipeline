@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: TMS Planification Confirmation
+  version: '1.0'
+  description: ''
+servers:
+- url: ''
+  description: Production
+tags:
+- name: AndSoft TMS
+  description: Operations for TMS Planification Confirmation
+paths:
+  /:
+    post:
+      tags:
+      - AndSoft TMS
+      summary: TMS Planification Confirmation
+      description: ''
+      operationId: iF102
+      responses:
+        '200':
+          description: Successful response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IF-102Request'
+components:
+  schemas:
+    IF-102Request:
+      type: object
+      properties:
+        order-id:
+          type: string
+          description: Unique identifier for a transport order, assigned by OMS at creation.
+        planned-transport-date:
+          type: string
+          format: date
+          description: Date TMS's planification engine schedules the transport to occur.
+        transport-mode:
+          type: string
+          enum:
+          - road
+          - rail
+          - short-sea
+          description: Mode of transport assigned by TMS planification.
+          example: road
+        planification-status:
+          type: string
+          enum:
+          - pending
+          - planned
+          - re-planned
+          - plan-failed
+          description: Status of the transport plan as produced by TMS's planification engine.
+          example: pending
+      required:
+      - order-id
+      - planification-status
+      - planned-transport-date
+      - transport-mode

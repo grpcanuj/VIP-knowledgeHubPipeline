@@ -1,0 +1,38 @@
+# Maps SharePoint documents to pipeline inputs. Reviewed like code; files not listed here are never processed.
+#
+# variant:  default -> PR targets `develop`; any other name -> PR targets `variant/<name>`
+# template: json -> extract_interface_from_docx.py ; xml -> extract_interface_from_docx_xml.py
+# enabled:  set to true once sharepoint_path points at the real file
+interfaces:
+  - id: CV07_01
+    name: CV07_01_TMS_SHIP_ORDERS
+    domain: cv07_shippeo
+    template: json
+    variant: default
+    sharepoint_path: /Integration Specs/Shippeo/CV07_01_TMS_SHIP_ORDERS.docx
+    enabled: false
+
+  - id: CV07_02
+    name: CV07_02_TMS_2_SHIP_EVENTS
+    domain: cv07_02_shippeo_events
+    template: json
+    variant: default
+    sharepoint_path: /Integration Specs/Shippeo/CV07_02_TMS_2_SHIP_EVENTS.docx
+    enabled: false
+
+  - id: CV10_01
+    name: CV10_01_MD_TRUCKS_TRAILERS
+    domain: cv10_fms
+    template: xml
+    variant: fms
+    sharepoint_path: /Integration Specs/FMS/CV10_01 - Integration MD-Trucks Trailers.docx
+    enabled: false
+
+  # CV10_02 (FMS_2_TMS_Unavailabilities): confirm whether it uses the json or xml template, then uncomment.
+  # - id: CV10_02
+  #   name: CV10_02_FMS_2_TMS_UNAVAILABILITIES
+  #   domain: cv10_fms
+  #   template: json
+  #   variant: fms
+  #   sharepoint_path: /Integration Specs/FMS/CV10_02 - FMS_2_TMS_Unavailabilities.docx
+  #   enabled: false

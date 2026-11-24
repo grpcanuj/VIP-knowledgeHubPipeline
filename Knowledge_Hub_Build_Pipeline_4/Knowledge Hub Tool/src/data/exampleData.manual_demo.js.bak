@@ -1,0 +1,254 @@
+// -----------------------------------------------------------------------
+// Single shared metadata model — Fields -> Interfaces -> Flows -> Requirements
+// This is the one thing every page (Glossary, Interface Index, Flow View,
+// Traceability) reads from. Nothing below is duplicated per-page; each page
+// just renders a different slice/view of the same records, referenced by ID
+// — exactly the "one metadata source, compiled to static pages" model this
+// mockup is illustrating.
+//
+// Worked example carried through all four views: the TMS <-> Shippeo
+// "Create Plan" / "Plan Confirmation" exchange (INT-102 / INT-103).
+// -----------------------------------------------------------------------
+
+export const FIELDS = [
+  {
+    id: "plan-id",
+    definition: "Unique identifier assigned to a transport plan once TMS creates it.",
+    owner: "AndSoft — TMS",
+    sensitivity: "Internal",
+    usedIn: ["INT-102", "INT-103"],
+    businessTerm: "Transport Plan ID",
+    object: "Transport Plan",
+    dataType: "String, UUID",
+    length: "36 characters",
+    allowedValues: "Any valid UUID v4",
+    mandatory: "Mandatory on every transport plan record",
+    sourceSystem: "AndSoft — TMS (system of record)",
+    targetSystems: "Shippeo",
+    transformationRules: "None — passed through unchanged on both legs",
+    dataQualityRules: "Must be a valid UUID; must be unique per plan",
+  },
+  {
+    id: "plan-status",
+    definition: "Lifecycle state of a transport plan (created, confirmed, rejected).",
+    owner: "AndSoft — TMS",
+    sensitivity: "Internal",
+    usedIn: ["INT-102", "INT-103"],
+    businessTerm: "Plan Status Code",
+    object: "Transport Plan",
+    dataType: "String (enum)",
+    length: "1 word",
+    allowedValues: "CREATED · CONFIRMED · REJECTED",
+    mandatory: "Mandatory on every transport plan record",
+    sourceSystem: "AndSoft — TMS (system of record)",
+    targetSystems: "Shippeo",
+    transformationRules: "Set to CREATED by TMS on send; overwritten by Shippeo's response value on the inbound leg",
+    dataQualityRules: "Must be one of the three allowed values",
+  },
+  {
+    id: "carrier-code",
+    definition: "Standard code identifying the transport carrier assigned to a shipment.",
+    owner: "AndSoft — TMS",
+    sensitivity: "Public",
+    usedIn: ["INT-102", "INT-103", "INT-014"],
+    businessTerm: "Carrier Code",
+    object: "Transport Plan",
+    dataType: "String, 4-letter code",
+    length: "4 characters",
+    allowedValues: "Registered carrier codes only (validated against carrier master)",
+    mandatory: "Mandatory on every transport plan record",
+    sourceSystem: "AndSoft — TMS",
+    targetSystems: "Shippeo · Carrier Gateway",
+    transformationRules: "None",
+    dataQualityRules: "Must exist in the carrier master table",
+  },
+  {
+    id: "planned-departure",
+    definition: "Scheduled departure timestamp for the transport plan's first leg.",
+    owner: "AndSoft — TMS",
+    sensitivity: "Internal",
+    usedIn: ["INT-102"],
+    businessTerm: "Planned Departure Time",
+    object: "Transport Plan",
+    dataType: "DateTime, ISO-8601",
+    length: "—",
+    allowedValues: "Any valid future timestamp at time of send",
+    mandatory: "Mandatory on Create Plan",
+    sourceSystem: "AndSoft — TMS",
+    targetSystems: "Shippeo",
+    transformationRules: "Converted from local depot time to UTC before send",
+    dataQualityRules: "Must not be in the past relative to send time",
+  },
+  {
+    id: "shipment-id",
+    definition: "Unique identifier assigned to a shipment once consolidated for transport.",
+    owner: "Inform — WMS",
+    sensitivity: "Internal",
+    usedIn: ["INT-021", "INT-027"],
+    businessTerm: "Shipment ID",
+    object: "Shipment",
+    dataType: "String",
+    length: "Variable",
+    allowedValues: "Any WMS-generated identifier",
+    mandatory: "Mandatory once a shipment is consolidated",
+    sourceSystem: "Inform — WMS",
+    targetSystems: "AndSoft OMS · AndSoft TMS",
+    transformationRules: "None",
+    dataQualityRules: "Must be unique within a warehouse",
+  },
+];
+
+export const INTERFACES = [
+  {
+    id: "INT-014",
+    name: "Order Created",
+    source: "OMS",
+    target: "TMS",
+    type: "REST / OpenAPI",
+    specVersion: "2.3",
+    owner: "AndSoft",
+    path: "POST /v1/orders/create",
+    frequency: "Near-real-time",
+    fields: ["carrier-code"],
+    usedByRequirement: null,
+    hasOwnSpec: true,
+  },
+  {
+    id: "INT-021",
+    name: "Pick Confirmation",
+    source: "WMS",
+    target: "OMS",
+    type: "REST",
+    specVersion: "1.4",
+    owner: "Inform",
+    path: "POST /v1/picks/confirm",
+    frequency: "Near-real-time",
+    fields: ["shipment-id"],
+    usedByRequirement: null,
+    hasOwnSpec: true,
+  },
+  {
+    id: "INT-102",
+    name: "TMS → Shippeo — Create Plan",
+    source: "TMS",
+    target: "Shippeo",
+    type: "REST / Webhook",
+    specVersion: "1.0",
+    owner: "AndSoft (TMS side) — Shippeo (receiving side)",
+    path: "POST /v1/plans/create",
+    frequency: "Async, on plan creation",
+    fields: ["plan-id", "plan-status", "carrier-code", "planned-departure"],
+    usedByRequirement: "REQ-102",
+    hasOwnSpec: true,
+  },
+  {
+    id: "INT-103",
+    name: "Shippeo → TMS — Plan Confirmation",
+    source: "Shippeo",
+    target: "TMS",
+    type: "REST / Webhook callback",
+    specVersion: "1.0",
+    owner: "Shippeo (sending side) — AndSoft (TMS side)",
+    path: "POST /v1/plans/{plan-id}/confirm",
+    frequency: "Async callback, on plan acceptance/rejection",
+    fields: ["plan-id", "plan-status", "carrier-code"],
+    usedByRequirement: "REQ-103",
+    hasOwnSpec: true,
+  },
+];
+
+export const FLOWS = [
+  {
+    id: "FLOW-01",
+    name: "Order to Delivery (E2E)",
+    deliverable: "#5",
+    description: "End-to-end order lifecycle across OMS, WMS, TMS and the Carrier Gateway.",
+    interfaces: ["INT-014", "INT-021"],
+    diagram: `flowchart LR
+  A["Order Management (OMS)"] -->|"IF-014 Order Created"| B["Warehouse Mgmt (WMS)"]
+  B -->|"IF-021 Pick Confirmation"| C["Transport Mgmt (TMS)"]
+  C -->|"IF-033 Dispatch Advice"| D["Carrier Gateway"]
+  C -->|"IF-027 Delivery Status"| A
+  D -->|"IF-040 POD Confirmation"| A`,
+  },
+  {
+    id: "FLOW-02",
+    name: "Transport Plan — Create & Confirm (TMS ⇄ Shippeo)",
+    deliverable: "#5",
+    description: "The two-leg async exchange used to create a transport plan and receive Shippeo's confirmation of it.",
+    interfaces: ["INT-102", "INT-103"],
+    diagram: `sequenceDiagram
+  participant TMS
+  participant Shippeo
+  TMS->>Shippeo: INT-102 Create Plan (async)
+  Note right of Shippeo: Same business exchange - Leg 2 is Shippeo's async response
+  Shippeo-->>TMS: INT-103 Plan Confirmation (async callback)`,
+  },
+];
+
+export const REQUIREMENTS = [
+  {
+    id: "REQ-014",
+    text: "OMS must notify TMS the moment an order is created.",
+    interface: "INT-014",
+    testCase: "TC-0301",
+    status: "passed",
+    statusLabel: "Passed",
+  },
+  {
+    id: "REQ-102",
+    text: "TMS must create the transport plan and transmit it to Shippeo.",
+    interface: "INT-102",
+    testCase: "TC-0501",
+    status: "passed",
+    statusLabel: "Passed",
+    leg: "outbound",
+    legGroup: "TMS-SHIPPEO",
+    legTitle: "Create Plan — TMS sends the transport plan to Shippeo",
+    evidence: {
+      status: "passed",
+      statusLabel: "Passed",
+      fields: [
+        { label: "Test Cycle", value: "SIT Cycle 3" },
+        { label: "Last Run", value: "18-Sep-2026, 14:32 UTC" },
+        { label: "Executed Via", value: "Newman — contract test" },
+        { label: "CI Run", value: "Tower 2 pipeline #482" },
+        { label: "Attempt", value: "1st attempt — no retest needed" },
+        { label: "Evidence Pack", value: "SIT-Cycle-3-Evidence-Pack.zip", link: true },
+      ],
+    },
+  },
+  {
+    id: "REQ-103",
+    text: "TMS must receive and process Shippeo's confirmation of the transmitted plan.",
+    interface: "INT-103",
+    testCase: "TC-0502",
+    status: "pending",
+    statusLabel: "Executed — Awaiting Response",
+    leg: "inbound",
+    legGroup: "TMS-SHIPPEO",
+    legTitle: "Receive Confirmation — Shippeo confirms the plan back to TMS",
+    evidence: {
+      status: "pending",
+      statusLabel: "Executed — Awaiting Response",
+      fields: [
+        { label: "Test Cycle", value: "SIT Cycle 3" },
+        { label: "Last Attempt", value: "18-Sep-2026, 14:35 UTC" },
+        { label: "Executed Via", value: "Newman — async listener" },
+        { label: "CI Run", value: "Tower 2 pipeline #482" },
+        { label: "Attempt", value: "1st attempt — no callback yet" },
+        { label: "Result", value: "No evidence pack yet — pending Shippeo callback", note: true },
+      ],
+    },
+  },
+];
+
+export function getField(id) {
+  return FIELDS.find((f) => f.id === id);
+}
+export function getInterface(id) {
+  return INTERFACES.find((i) => i.id === id);
+}
+export function getRequirement(id) {
+  return REQUIREMENTS.find((r) => r.id === id);
+}

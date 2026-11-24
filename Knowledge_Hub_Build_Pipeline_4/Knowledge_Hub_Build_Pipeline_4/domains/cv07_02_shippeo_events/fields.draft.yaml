@@ -1,0 +1,296 @@
+# AUTO-GENERATED DRAFT from CV07_02_TMS_2_SHIP_EVENTS.docx - review before promoting.
+# Domain: CV07_02_TMS_2_SHIP_EVENTS
+
+fields:
+- field_id: meta-senderid
+  name: Meta Sender Id
+  description: 'Fixed value: CAT2020'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: CAT2020'
+  format: max length 35
+- field_id: meta-duplicatereceiverid
+  name: Meta Duplicate Receiver Id
+  description: 'Fixed value: shippeo'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: shippeo'
+  format: max length 35
+- field_id: meta-messagetype
+  name: Meta Message Type
+  description: 'Fixed value: GTF514'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: GTF514'
+  format: max length 6
+- field_id: meta-messagedate
+  name: Meta Message Date
+  description: Generation timestamp (ISO 8601 UTC)
+  data_type: datetime
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+- field_id: meta-messagefunction
+  name: Meta Message Function
+  description: 'Fixed value: 9 (Original / Event message)'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: 9 (Original / Event message)'
+  format: max length 1
+- field_id: meta-messagereference
+  name: Meta Message Reference
+  description: Unique event message reference
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: events-eventreference
+  name: Events Event Reference
+  description: Unique identifier of the event record in TMS
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: events-technicalreference
+  name: Events Technical Reference
+  description: Concatenation of chassis number and lot number
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: events-orderreference
+  name: Events Order Reference
+  description: Transport order reference matching PLN
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: events-eventcode-eventname
+  name: Events Event Code / event Name
+  description: Normalized milestone code (CON_LOAD, CON_UNLOAD, DELIVERED...)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: events-situationcode
+  name: Events Situation Code
+  description: 'Situation code (ECH: Load, LIV: Deliv, ENE: Anomaly)'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 10
+- field_id: events-justificationcode
+  name: Events Justification Code
+  description: 'Justification code (CFM: Conform, NCF: Damage, MQT: Missing)'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 10
+- field_id: events-eventdatetime-eventdate
+  name: Events Event Date Time / event Date
+  description: Real execution timestamp (ISO 8601 UTC)
+  data_type: datetime
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+- field_id: events-eventsource-triggersource
+  name: Events Event Source / trigger Source
+  description: Origin of validation (TMS, WMS, DRIVER_APP, DISPATCHER)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 20
+- field_id: events-stoptype
+  name: Events Stop Type
+  description: PICKUP / DELIVERY / INTERMEDIATE
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 20
+- field_id: location-identifier-externalid
+  name: Location Identifier / external Id
+  description: TMS site partner code (e.g. CEN01000-0004)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: location-qualifier
+  name: Location Qualifier
+  description: 'Fixed value: ZZ'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: ZZ'
+  format: max length 3
+- field_id: location-name
+  name: Location Name
+  description: Location name
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 70
+- field_id: location-city
+  name: Location City
+  description: City of the event site
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: location-zip-zipcode
+  name: Location Zip / zip Code
+  description: Postal code
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 10
+- field_id: location-country
+  name: Location Country
+  description: ISO-2 Country code
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 2
+- field_id: location-latitude-longitude
+  name: Location Latitude / longitude
+  description: GPS coordinates
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '3.6'
+- field_id: actor-organization
+  name: Actor Organization
+  description: 'Fixed value: GROUPE CAT'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: GROUPE CAT'
+  format: max length 35
+- field_id: actor-agency
+  name: Actor Agency
+  description: CAT Agency / Carrier of publication (e.g. TC BASSENS (FR))
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: actor-userid
+  name: Actor User Id
+  description: Login of operator / dispatcher
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: reason-reasoncode
+  name: Reason Reason Code
+  description: Incident classification code (e.g. TRAFFIC, BREAKDOWN)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: reason-comment
+  name: Reason Comment
+  description: Free comment or description
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 512
+- field_id: items-reference
+  name: Items Reference
+  description: Full VIN number of the vehicle
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: items-ean
+  name: Items Ean
+  description: VIS (last 8 characters of VIN / chassis)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: items-itemstatus
+  name: Items Item Status
+  description: Item status (LOADED, DELIVERED, DAMAGED, MISSING)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: documents-documenttype
+  name: Documents Document Type
+  description: POD, CMR_SIGNATURE, DAMAGE_PICTURE
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: documents-documenturl
+  name: Documents Document Url
+  description: URL to download document / photo
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 255

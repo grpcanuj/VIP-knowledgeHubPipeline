@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Field",
+  "description": "One glossary field definition, as recorded in the Knowledge Hub. Interfaces reference fields by field_id rather than redefining them.",
+  "type": "object",
+  "required": ["field_id", "name", "data_type", "status", "source_system", "sensitivity"],
+  "properties": {
+    "field_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique kebab-case field key, e.g. order-status"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable field name, e.g. 'Order Status'"
+    },
+    "description": { "type": "string" },
+    "data_type": {
+      "type": "string",
+      "enum": ["string", "integer", "decimal", "boolean", "date", "datetime", "enum"]
+    },
+    "format": {
+      "type": "string",
+      "description": "Format hint, e.g. ISO-8601, or a pattern template"
+    },
+    "allowed_values": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required when data_type is 'enum'"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["mandatory", "conditional", "optional"],
+      "description": "General business rule for this field, independent of any one interface"
+    },
+    "source_system": {
+      "type": "string",
+      "description": "System of record / data owner for this field"
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "pii"]
+    },
+    "quality_rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Data quality / validation rules for this field"
+    }
+  },
+  "if": {
+    "properties": { "data_type": { "const": "enum" } }
+  },
+  "then": {
+    "required": ["allowed_values"]
+  }
+}

@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI/CD Pipeline Design</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f6f8fa;
+  --text: #1b1f24;
+  --text-muted: #57606a;
+  --border: #d8dee4;
+  --accent: #0b3d66;
+  --accent-2: #0e7c86;
+  --code-bg: #f6f8fa;
+  --blocking: #b42318;
+  --blocking-bg: #fdecea;
+  --advisory: #9a6700;
+  --advisory-bg: #fff8e6;
+  --info: #0b3d66;
+  --info-bg: #eaf2fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181f;
+    --bg-alt: #1b212b;
+    --text: #e6edf3;
+    --text-muted: #9aa7b2;
+    --border: #2d3540;
+    --accent: #7db2e8;
+    --accent-2: #5fc3cf;
+    --code-bg: #1b212b;
+    --blocking: #ff8c82;
+    --blocking-bg: #3a1b18;
+    --advisory: #e3b341;
+    --advisory-bg: #3a2f10;
+    --info: #7db2e8;
+    --info-bg: #142433;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+.masthead {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+}
+.masthead .kicker {
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.masthead h1 {
+  margin: 6px 0 4px;
+  font-size: 1.9rem;
+  color: var(--accent);
+}
+.masthead .meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+h1, h2, h3, h4 { color: var(--accent); scroll-margin-top: 20px; }
+h2 {
+  margin-top: 2.4em;
+  padding-top: 0.4em;
+  border-top: 1px solid var(--border);
+  font-size: 1.35rem;
+}
+h3 { font-size: 1.1rem; color: var(--accent-2); }
+p, li { font-size: 0.98rem; }
+a { color: var(--accent-2); }
+code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code { background: none; border: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 0.92rem; }
+th { background: var(--bg-alt); }
+blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--accent-2);
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border-radius: 0 6px 6px 0;
+}
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+.toc {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 24px 0 36px;
+}
+.toc > strong { display: block; margin-bottom: 8px; font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.toc ul { margin: 0; padding-left: 1.2em; columns: 1; }
+.toc li { font-size: 0.92rem; margin: 4px 0; }
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.badge-blocking { color: var(--blocking); background: var(--blocking-bg); }
+.badge-advisory { color: var(--advisory); background: var(--advisory-bg); }
+.badge-informational { color: var(--info); background: var(--info-bg); }
+footer {
+  margin-top: 4em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+</style>
+<style>pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #ffffcc }
+.codehilite { background: #f8f8f8; }
+.codehilite .c { color: #3D7B7B; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #F00 } /* Error */
+.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666 } /* Operator */
+.codehilite .ch { color: #3D7B7B; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #3D7B7B; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #9C6500 } /* Comment.Preproc */
+.codehilite .cpf { color: #3D7B7B; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #3D7B7B; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #3D7B7B; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #E40000 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #008400 } /* Generic.Inserted */
+.codehilite .go { color: #717171 } /* Generic.Output */
+.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #04D } /* Generic.Traceback */
+.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
+.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #B00040 } /* Keyword.Type */
+.codehilite .m { color: #666 } /* Literal.Number */
+.codehilite .s { color: #BA2121 } /* Literal.String */
+.codehilite .na { color: #687822 } /* Name.Attribute */
+.codehilite .nb { color: #008000 } /* Name.Builtin */
+.codehilite .nc { color: #00F; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #800 } /* Name.Constant */
+.codehilite .nd { color: #A2F } /* Name.Decorator */
+.codehilite .ni { color: #717171; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #CB3F38; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #00F } /* Name.Function */
+.codehilite .nl { color: #767600 } /* Name.Label */
+.codehilite .nn { color: #00F; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #19177C } /* Name.Variable */
+.codehilite .ow { color: #A2F; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #BBB } /* Text.Whitespace */
+.codehilite .mb { color: #666 } /* Literal.Number.Bin */
+.codehilite .mf { color: #666 } /* Literal.Number.Float */
+.codehilite .mh { color: #666 } /* Literal.Number.Hex */
+.codehilite .mi { color: #666 } /* Literal.Number.Integer */
+.codehilite .mo { color: #666 } /* Literal.Number.Oct */
+.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
+.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
+.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
+.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
+.codehilite .se { color: #AA5D1F; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.codehilite .si { color: #A45A77; font-weight: bold } /* Literal.String.Interpol */
+.codehilite .sx { color: #008000 } /* Literal.String.Other */
+.codehilite .sr { color: #A45A77 } /* Literal.String.Regex */
+.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
+.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
+.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #00F } /* Name.Function.Magic */
+.codehilite .vc { color: #19177C } /* Name.Variable.Class */
+.codehilite .vg { color: #19177C } /* Name.Variable.Global */
+.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
+.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
+.codehilite .il { color: #666 } /* Literal.Number.Integer.Long */
+.codehilite { background: var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; }</style></head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="kicker">Groupe CAT VIP — Integration Knowledge Hub</div>
+    <h1>CI/CD Pipeline Design</h1>
+    <div class="meta"></div>
+  </div>
+  <div class="toc"><strong>Contents</strong><div class="toc">
+<ul>
+<li><a href="#integration-knowledge-hub-cicd-pipeline-design">Integration Knowledge Hub — CI/CD Pipeline Design</a><ul>
+<li><a href="#1-purpose-and-scope">1. Purpose and scope</a></li>
+<li><a href="#2-key-facts-about-the-system-being-automated">2. Key facts about the system being automated</a></li>
+<li><a href="#3-architecture-overview">3. Architecture overview</a></li>
+<li><a href="#4-environments-and-branching">4. Environments and branching</a></li>
+<li><a href="#5-sharepoint-integration">5. SharePoint integration</a><ul>
+<li><a href="#51-assumptions">5.1 Assumptions</a></li>
+<li><a href="#52-authentication">5.2 Authentication</a></li>
+<li><a href="#53-graph-calls-used">5.3 Graph calls used</a></li>
+<li><a href="#54-how-a-change-is-detected-three-triggers">5.4 How a change is detected (three triggers)</a></li>
+<li><a href="#55-telling-the-pipeline-what-to-do-with-each-file">5.5 Telling the pipeline what to do with each file</a></li>
+<li><a href="#56-idempotency-and-traceability">5.6 Idempotency and traceability</a></li>
+</ul>
+</li>
+<li><a href="#6-workflow-1-ingest-sharepoint-to-review-pr">6. Workflow 1 — Ingest (SharePoint to review PR)</a></li>
+<li><a href="#7-stage-2-human-review-inside-the-pr">7. Stage 2 — human review inside the PR</a></li>
+<li><a href="#8-workflow-2-build-validate-generate-build-ui">8. Workflow 2 — Build (validate, generate, build UI)</a><ul>
+<li><a href="#81-handling-overall-fail-in-run-reports">8.1 Handling Overall: FAIL in run reports</a></li>
+</ul>
+</li>
+<li><a href="#9-workflow-3-deploy-to-the-vm-dev-and-uat">9. Workflow 3 — Deploy to the VM (Dev and UAT)</a><ul>
+<li><a href="#91-vm-layout">9.1 VM layout</a></li>
+<li><a href="#92-what-a-deployment-does-deploydeploysh">9.2 What a deployment does (deploy/deploy.sh)</a></li>
+<li><a href="#93-the-self-hosted-runner">9.3 The self-hosted runner</a></li>
+<li><a href="#94-approval-for-uat">9.4 Approval for UAT</a></li>
+</ul>
+</li>
+<li><a href="#10-end-to-end-walkthrough-cv07_02-revised-by-the-vendor">10. End-to-end walkthrough (CV07_02 revised by the vendor)</a></li>
+<li><a href="#11-configuration-reference">11. Configuration reference</a></li>
+<li><a href="#12-security-and-compliance">12. Security and compliance</a></li>
+<li><a href="#13-implementation-plan">13. Implementation plan</a></li>
+<li><a href="#14-risks-and-open-decisions">14. Risks and open decisions</a></li>
+<li><a href="#15-operations">15. Operations</a></li>
+<li><a href="#16-multiple-pipeline-variants-with-one-common-ui">16. Multiple pipeline variants with one common UI</a><ul>
+<li><a href="#161-options-considered">16.1 Options considered</a></li>
+<li><a href="#162-branch-model">16.2 Branch model</a></li>
+<li><a href="#163-rules-that-keep-the-ui-common">16.3 Rules that keep the UI common</a></li>
+<li><a href="#164-how-the-ui-behaves-across-variants">16.4 How the UI behaves across variants</a></li>
+<li><a href="#165-cicd-for-variants">16.5 CI/CD for variants</a></li>
+<li><a href="#166-hosting-several-variants-on-one-vm-with-two-ports">16.6 Hosting several variants on one VM with two ports</a></li>
+<li><a href="#167-end-to-end-example-a-shippeo-only-change">16.7 End-to-end example: a Shippeo-only change</a></li>
+<li><a href="#168-controls-summary">16.8 Controls summary</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+  <h1 id="integration-knowledge-hub-cicd-pipeline-design">Integration Knowledge Hub — CI/CD Pipeline Design</h1>
+<p>How a vendor interface document dropped into SharePoint becomes a validated glossary, OpenAPI specs and a deployed Knowledge Hub UI, automatically, using GitHub Actions and a single virtual host machine (VM) serving UAT and Dev on separate ports.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audience</td>
+<td>Architects, DevOps, integration reviewers, UAT owners</td>
+</tr>
+<tr>
+<td>Companion documents</td>
+<td><code>Pipeline_Run_Guide_1.docx</code> (manual run order), <code>Interface_Onboarding_Methodology.md</code> (stage definitions)</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>GitHub Actions, SharePoint Online (Microsoft Graph), one Linux VM running nginx</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-purpose-and-scope">1. Purpose and scope</h2>
+<p>Today the pipeline is run by hand: someone copies a vendor Word document into <code>source_docs/</code>, runs nine commands in order, promotes drafts, and rebuilds the UI. This design automates that end to end while keeping the one step that needs judgement — <strong>Stage 2 review</strong> — as an explicit, auditable human gate.</p>
+<p><strong>In scope</strong>
+- Detecting a new or revised document in SharePoint and fetching it.
+- Running extract and lint, and presenting the results for human review.
+- Running validate, compile, OpenAPI generation, reports and the UI build after review.
+- Deploying to Dev (port 8081) and UAT (port 8080) on one VM, with approval, health check and rollback.
+- Publishing reports and OpenAPI files back to SharePoint for non-technical stakeholders.</p>
+<p><strong>Out of scope:</strong> changes to the extraction/lint rules themselves, UI feature work, production (non-UAT) hosting.</p>
+<h2 id="2-key-facts-about-the-system-being-automated">2. Key facts about the system being automated</h2>
+<p>These facts drive every design decision below.</p>
+<ol>
+<li><strong>There is no long-running backend.</strong> The "Python backend" is a set of batch scripts. The output is a static React site plus generated files. Deployment is therefore copying static files, not running a service.</li>
+<li><strong>YAML is the source of truth.</strong> <code>domains/*/{fields,interfaces,flows}.yaml</code>, validated against <code>schemas/*.json</code>. The UI only reads the file that <code>compile_knowledge_hub.py</code> emits (<code>FIELDS</code>, <code>INTERFACES</code>, <code>FLOWS</code>, <code>REQUIREMENTS</code>), so the UI code never changes per interface.</li>
+<li><strong>Order matters.</strong> The real order is: extract → lint → manual review/promote → validate → compile → OpenAPI → run report → run report HTML → findings tracker (see the Run Guide). OpenAPI must run after promote, because it reads the promoted <code>interfaces.yaml</code>.</li>
+<li><strong>Each interface needs three inputs the document alone does not give:</strong> interface id (e.g. <code>CV07_02</code>), interface name, and target domain folder. Two extractor templates exist (JSON "Rank" template and XML master-data template).</li>
+<li><strong>A failing run report is valid output.</strong> The run report reports <code>Overall: FAIL</code> when lint has blocking findings against the vendor document. CI must treat this as a business finding to route to the vendor, not as a broken build.</li>
+<li><strong>Local runs use Python 3.15 and offline wheels</strong> because of laptop restrictions. CI runners have normal package access and use a pinned, supported Python (3.12).</li>
+</ol>
+<h2 id="3-architecture-overview">3. Architecture overview</h2>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">SharePoint</span><span class="w"> </span><span class="n">Online</span><span class="w">                         </span><span class="n">GitHub</span><span class="w">                                  </span><span class="n">VM</span><span class="w"> </span><span class="p">(</span><span class="n">nginx</span><span class="p">)</span>
+<span class="w"> </span><span class="err">┌──────────────────────┐</span><span class="w">   </span><span class="n">event</span><span class="o">/</span><span class="n">poll</span><span class="w">   </span><span class="err">┌──────────────────────┐</span>
+<span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="n">Integration</span><span class="w"> </span><span class="n">Specs</span><span class="w">    </span><span class="err">│──────────────▶</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="mf">1.</span><span class="w"> </span><span class="n">INGEST</span><span class="w"> </span><span class="n">workflow</span><span class="w">   </span><span class="err">│</span>
+<span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">vendor</span><span class="w"> </span><span class="o">.</span><span class="n">docx</span><span class="p">)</span><span class="w">      </span><span class="err">│</span><span class="w">                </span><span class="err">│</span><span class="w">  </span><span class="n">fetch</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">extract</span><span class="w"> </span><span class="err">→</span><span class="w">   </span><span class="err">│</span>
+<span class="w"> </span><span class="err">│</span><span class="w">                      </span><span class="err">│◀──────────┐</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">lint</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">open</span><span class="w"> </span><span class="n">PR</span><span class="w">      </span><span class="err">│</span>
+<span class="w"> </span><span class="err">└──────────────────────┘</span><span class="w">  </span><span class="n">publish</span><span class="w">  </span><span class="err">│</span><span class="w">    </span><span class="err">└──────────┬───────────┘</span>
+<span class="w">                                    </span><span class="err">│</span><span class="w">               </span><span class="err">│</span><span class="w"> </span><span class="n">human</span><span class="w"> </span><span class="n">review</span><span class="w"> </span><span class="p">(</span><span class="n">Stage</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w"> </span><span class="err">┌──────────────────────┐</span><span class="w">           </span><span class="err">│</span><span class="w">               </span><span class="err">▼</span>
+<span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="n">Pipeline</span><span class="w"> </span><span class="n">Outputs</span><span class="w">     </span><span class="err">│</span><span class="w">           </span><span class="err">│</span><span class="w">    </span><span class="err">┌──────────────────────┐</span>
+<span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="n">run</span><span class="w"> </span><span class="n">reports</span><span class="p">,</span><span class="w"> </span><span class="n">xlsx</span><span class="p">,</span><span class="w">  </span><span class="err">│◀──────────┴────│</span><span class="w"> </span><span class="mf">2.</span><span class="w"> </span><span class="n">BUILD</span><span class="w"> </span><span class="n">workflow</span><span class="w">    </span><span class="err">│</span>
+<span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="n">OpenAPI</span><span class="w">             </span><span class="err">│</span><span class="w">                </span><span class="err">│</span><span class="w">  </span><span class="n">validate</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">compile</span><span class="w"> </span><span class="err">→│</span>
+<span class="w"> </span><span class="err">└──────────────────────┘</span><span class="w">                </span><span class="err">│</span><span class="w">  </span><span class="n">OpenAPI</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">reports</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">│</span>
+<span class="w">                                         </span><span class="err">│</span><span class="w">  </span><span class="n">UI</span><span class="w"> </span><span class="n">lint</span><span class="o">+</span><span class="n">build</span><span class="w">       </span><span class="err">│</span>
+<span class="w">                                         </span><span class="err">└──────────┬───────────┘</span>
+<span class="w">                                                    </span><span class="err">│</span><span class="w"> </span><span class="n">artifact</span><span class="p">:</span><span class="w"> </span><span class="n">site</span>
+<span class="w">                              </span><span class="n">merge</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">develop</span><span class="w">      </span><span class="err">│</span><span class="w">      </span><span class="n">merge</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="p">(</span><span class="n">approval</span><span class="p">)</span>
+<span class="w">                                       </span><span class="err">┌────────────┴────────────┐</span>
+<span class="w">                                       </span><span class="err">▼</span><span class="w">                         </span><span class="err">▼</span>
+<span class="w">                              </span><span class="err">┌────────────────┐</span><span class="w">        </span><span class="err">┌────────────────┐</span>
+<span class="w">                              </span><span class="err">│</span><span class="w"> </span><span class="mi">3</span><span class="n">a</span><span class="o">.</span><span class="w"> </span><span class="n">DEPLOY</span><span class="w"> </span><span class="n">DEV</span><span class="w"> </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w"> </span><span class="mi">3</span><span class="n">b</span><span class="o">.</span><span class="w"> </span><span class="n">DEPLOY</span><span class="w"> </span><span class="n">UAT</span><span class="w"> </span><span class="err">│</span>
+<span class="w">                              </span><span class="err">│</span><span class="w"> </span><span class="bp">self</span><span class="o">-</span><span class="n">hosted</span><span class="w">    </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w"> </span><span class="bp">self</span><span class="o">-</span><span class="n">hosted</span><span class="w">    </span><span class="err">│</span>
+<span class="w">                              </span><span class="err">│</span><span class="w"> </span><span class="n">runner</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">VM</span><span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w"> </span><span class="n">runner</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">VM</span><span class="w">   </span><span class="err">│</span>
+<span class="w">                              </span><span class="err">└───────┬────────┘</span><span class="w">        </span><span class="err">└───────┬────────┘</span>
+<span class="w">                                      </span><span class="err">▼</span><span class="w">                         </span><span class="err">▼</span>
+<span class="w">                              </span><span class="n">nginx</span><span class="w"> </span><span class="p">:</span><span class="mi">8081</span><span class="w"> </span><span class="p">(</span><span class="n">Dev</span><span class="p">)</span><span class="w">         </span><span class="n">nginx</span><span class="w"> </span><span class="p">:</span><span class="mi">8080</span><span class="w"> </span><span class="p">(</span><span class="n">UAT</span><span class="p">)</span>
+<span class="w">                              </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/.../</span><span class="n">dev</span><span class="o">/</span><span class="n">current</span><span class="w">  </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/.../</span><span class="n">uat</span><span class="o">/</span><span class="n">current</span>
+</code></pre></div>
+
+<p><strong>Three workflows, one repository:</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Workflow</th>
+<th>Trigger</th>
+<th>Runs on</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ingest</td>
+<td>SharePoint event, schedule, or manual</td>
+<td>GitHub-hosted</td>
+<td>Fetch document, extract, lint, open review PR</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Build</td>
+<td>Pull request, push to <code>develop</code>/<code>main</code></td>
+<td>GitHub-hosted</td>
+<td>Validate, compile, generate, build UI, upload artifact</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Deploy</td>
+<td>After Build on <code>develop</code> (Dev) or <code>main</code> (UAT)</td>
+<td>Self-hosted runner on VM</td>
+<td>Publish release, health check, rollback on failure</td>
+</tr>
+</tbody>
+</table>
+<p>Workflows 2 and 3 are in one file today (<a href="../.github/workflows/knowledge-hub.yml">.github/workflows/knowledge-hub.yml</a>). Workflow 1 is new work (see section 13).</p>
+<p><strong>Why this split</strong>
+- Fetching and parsing untrusted <code>.docx</code> files runs on ephemeral GitHub-hosted runners, not on the VM that serves users.
+- The VM only receives finished static files; it needs no inbound SSH and no SharePoint credentials.
+- The human review gate is a normal pull request, so it is audited, branch-protected and reversible.</p>
+<h2 id="4-environments-and-branching">4. Environments and branching</h2>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Branch</th>
+<th>Port</th>
+<th>Who uses it</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dev</td>
+<td><code>develop</code></td>
+<td>8081</td>
+<td>Developers, integration team</td>
+<td>None (automatic on merge)</td>
+</tr>
+<tr>
+<td>UAT</td>
+<td><code>main</code></td>
+<td>8080</td>
+<td>UAT business users</td>
+<td>GitHub environment <code>uat</code> with required reviewers</td>
+</tr>
+</tbody>
+</table>
+<p>Flow of change:</p>
+<div class="codehilite"><pre><span></span><code>ingest/&lt;interface-id&gt;  ──PR + review──▶  develop  ──deploys──▶  Dev :8081
+                                            │
+                                  PR develop → main (UAT sign-off)
+                                            ▼
+                                          main  ──approval──▶  UAT :8080
+</code></pre></div>
+
+<ul>
+<li>Branch protection on <code>develop</code> and <code>main</code>: PR required, required check = Build, at least one reviewer, no force-push.</li>
+<li><code>CODEOWNERS</code> on <code>domains/**</code> and <code>schemas/**</code> so data owners must approve.</li>
+<li>Dev and UAT run the <strong>same artifact build process</strong>; they differ only by which commit they were built from.</li>
+<li>This section describes the single-pipeline case. For several pipeline variants in separate branches sharing one UI, see section 16.</li>
+</ul>
+<h2 id="5-sharepoint-integration">5. SharePoint integration</h2>
+<h3 id="51-assumptions">5.1 Assumptions</h3>
+<ul>
+<li>SharePoint Online (Microsoft 365). If it is on-premises SharePoint, the fetch must run on a self-hosted runner inside the network instead.</li>
+<li>Two document libraries (or two folders in one library):</li>
+<li><code>Integration Specs</code> — vendor inputs. Read-only for the pipeline.</li>
+<li><code>Pipeline Outputs</code> — reports and generated files. Write access for the pipeline. <strong>Must be separate from the input location</strong>, otherwise publishing outputs would re-trigger ingestion.</li>
+</ul>
+<h3 id="52-authentication">5.2 Authentication</h3>
+<p>Use an Entra ID (Azure AD) app registration:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Permission type</td>
+<td>Application permission <code>Sites.Selected</code> (Microsoft Graph)</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>Granted only to the one SharePoint site (read on Specs, write on Outputs)</td>
+</tr>
+<tr>
+<td>Credential</td>
+<td>Client certificate or client secret; prefer GitHub OIDC federated credential so no secret is stored</td>
+</tr>
+<tr>
+<td>Consent</td>
+<td>Tenant admin consent required once</td>
+</tr>
+</tbody>
+</table>
+<p><code>Sites.Selected</code> is deliberate: the pipeline can see one site only, not the whole tenant.</p>
+<h3 id="53-graph-calls-used">5.3 Graph calls used</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">Token</span><span class="w">       </span><span class="n">POST</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">login</span><span class="o">.</span><span class="n">microsoftonline</span><span class="o">.</span><span class="n">com</span><span class="o">/&lt;</span><span class="n">tenant</span><span class="o">&gt;/</span><span class="n">oauth2</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">token</span><span class="w">   </span><span class="p">(</span><span class="n">scope</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">graph</span><span class="o">.</span><span class="n">microsoft</span><span class="o">.</span><span class="n">com</span><span class="o">/.</span><span class="n">default</span><span class="p">)</span>
+<span class="n">Resolve</span><span class="w">     </span><span class="n">GET</span><span class="w">  </span><span class="o">/</span><span class="n">v1</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">sites</span><span class="o">/&lt;</span><span class="n">host</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">sites</span><span class="o">/&lt;</span><span class="n">site</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+<span class="n">List</span><span class="w">        </span><span class="n">GET</span><span class="w">  </span><span class="o">/</span><span class="n">v1</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">sites</span><span class="o">/&lt;</span><span class="n">site</span><span class="o">-</span><span class="n">id</span><span class="o">&gt;/</span><span class="n">drive</span><span class="o">/</span><span class="n">root</span><span class="p">:</span><span class="o">/&lt;</span><span class="n">folder</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">children</span><span class="err">?</span><span class="o">$</span><span class="n">select</span><span class="o">=</span><span class="n">id</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">eTag</span><span class="p">,</span><span class="n">lastModifiedDateTime</span><span class="p">,</span><span class="n">size</span><span class="p">,</span><span class="n">file</span>
+<span class="n">Download</span><span class="w">    </span><span class="n">GET</span><span class="w">  </span><span class="o">/</span><span class="n">v1</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">sites</span><span class="o">/&lt;</span><span class="n">site</span><span class="o">-</span><span class="n">id</span><span class="o">&gt;/</span><span class="n">drive</span><span class="o">/</span><span class="n">items</span><span class="o">/&lt;</span><span class="n">item</span><span class="o">-</span><span class="n">id</span><span class="o">&gt;/</span><span class="n">content</span><span class="w">        </span><span class="p">(</span><span class="mi">302</span><span class="w"> </span><span class="n">redirect</span><span class="p">;</span><span class="w"> </span><span class="n">follow</span><span class="w"> </span><span class="n">it</span><span class="p">)</span>
+<span class="n">Publish</span><span class="w">     </span><span class="n">PUT</span><span class="w">  </span><span class="o">/</span><span class="n">v1</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">sites</span><span class="o">/&lt;</span><span class="n">site</span><span class="o">-</span><span class="n">id</span><span class="o">&gt;/</span><span class="n">drive</span><span class="o">/</span><span class="n">root</span><span class="p">:</span><span class="o">/&lt;</span><span class="n">outputs</span><span class="o">&gt;/&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">content</span><span class="w">  </span><span class="p">(</span><span class="n">files</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="n">MB</span><span class="p">;</span><span class="w"> </span><span class="n">use</span><span class="w"> </span><span class="n">upload</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="n">above</span><span class="w"> </span><span class="n">that</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="54-how-a-change-is-detected-three-triggers">5.4 How a change is detected (three triggers)</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Mechanism</th>
+<th>Latency</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Event (recommended)</strong></td>
+<td>Power Automate flow: "When a file is created or modified" in <code>Integration Specs</code> → HTTP POST to the GitHub <code>repository_dispatch</code> API</td>
+<td>Minutes</td>
+<td>Needs a GitHub App token or fine-grained PAT stored in the flow's connection. Add a "Ready for ingestion" column or SharePoint content approval so half-saved drafts do not trigger runs.</td>
+</tr>
+<tr>
+<td><strong>B. Schedule (safety net)</strong></td>
+<td>Ingest workflow on <code>cron</code> (e.g. every 30 min) lists the folder and compares eTag/SHA with the committed lock file</td>
+<td>Up to the interval</td>
+<td>No setup on SharePoint side. Also catches missed events.</td>
+</tr>
+<tr>
+<td><strong>C. Manual</strong></td>
+<td><code>workflow_dispatch</code> with the SharePoint path as input</td>
+<td>Immediate</td>
+<td>For re-runs and first onboarding.</td>
+</tr>
+</tbody>
+</table>
+<p>Run A and B together; C is always available.</p>
+<p>Event payload sent by Power Automate:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"event_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sharepoint-doc-updated"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"client_payload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"item_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;drive item id&gt;"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/Integration Specs/Shippeo/CV07_02_TMS_2_SHIP_EVENTS.docx"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"etag"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;eTag&gt;"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"modified_by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;user&gt;"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="55-telling-the-pipeline-what-to-do-with-each-file">5.5 Telling the pipeline what to do with each file</h3>
+<p>The document does not contain its interface id, name, domain folder or template type. Keep a <strong>manifest in the repository</strong> (versioned, reviewed):</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># pipeline/interfaces.manifest.yaml</span>
+<span class="nt">interfaces</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CV07_02</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CV07_02_TMS_2_SHIP_EVENTS</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cv07_02_shippeo_events</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">json</span><span class="w">          </span><span class="c1"># json -&gt; extract_interface_from_docx.py ; xml -&gt; extract_interface_from_docx_xml.py</span>
+<span class="w">    </span><span class="nt">variant</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w">        </span><span class="c1"># default -&gt; PR to develop ; fms -&gt; PR to variant/fms</span>
+<span class="w">    </span><span class="nt">sharepoint_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/Integration Specs/Shippeo/CV07_02_TMS_2_SHIP_EVENTS.docx</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">           </span><span class="c1"># entries stay false until the real SharePoint path is set</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CV10_01</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CV10_01_MD_TRUCKS_TRAILERS</span>
+<span class="w">    </span><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cv10_fms</span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">xml</span>
+<span class="w">    </span><span class="nt">variant</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fms</span>
+<span class="w">    </span><span class="nt">sharepoint_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/Integration Specs/FMS/CV10_01 - Integration MD-Trucks Trailers.docx</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p>A file in SharePoint with no manifest entry, or with <code>enabled: false</code>, is <strong>not processed</strong>. <code>scripts/ingest_manifest.py</code> validates every field against a strict pattern before anything reaches a shell. This stops arbitrary uploads from running scripts and makes onboarding a new interface a reviewed PR.</p>
+<h3 id="56-idempotency-and-traceability">5.6 Idempotency and traceability</h3>
+<p>The Ingest workflow records, per document, in <code>pipeline/source_docs.lock.json</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"CV07_02"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"sharepoint_item_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"etag"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"sha256"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"fetched_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span><span class="w"> </span><span class="nt">"modified_by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<ul>
+<li>If the SHA-256 already matches the lock file, the run exits without changes (no duplicate PRs, no loops).</li>
+<li>The lock file is committed in the review PR, so every YAML change can be traced to an exact document version.</li>
+<li>The <code>.docx</code> itself is <strong>not committed</strong>. It lives in SharePoint, which is the system of record, and is deleted from the runner at job end.</li>
+</ul>
+<h2 id="6-workflow-1-ingest-sharepoint-to-review-pr">6. Workflow 1 — Ingest (SharePoint to review PR)</h2>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">trigger</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">read</span><span class="w"> </span><span class="n">manifest</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">get</span><span class="w"> </span><span class="n">Graph</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">download</span><span class="w"> </span><span class="n">docx</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">sha256</span><span class="w"> </span><span class="n">changed</span><span class="err">?</span><span class="w"> </span><span class="err">─</span><span class="n">no</span><span class="err">─▶</span><span class="w"> </span><span class="n">stop</span>
+<span class="w">                                                       </span><span class="err">│</span><span class="n">yes</span>
+<span class="w">                                                       </span><span class="err">▼</span>
+<span class="w">                         </span><span class="n">extract</span><span class="w"> </span><span class="p">(</span><span class="n">json</span><span class="o">|</span><span class="n">xml</span><span class="p">)</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">lint</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">findings</span><span class="w"> </span><span class="n">tracker</span>
+<span class="w">                                                       </span><span class="err">│</span>
+<span class="w">                          </span><span class="n">create</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="n">ingest</span><span class="o">/&lt;</span><span class="n">id</span><span class="o">&gt;</span><span class="w"> </span><span class="err">◀──┘</span>
+<span class="w">                          </span><span class="n">commit</span><span class="w"> </span><span class="n">drafts</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">reports</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lock</span><span class="w"> </span><span class="n">file</span>
+<span class="w">                          </span><span class="n">open</span><span class="w"> </span><span class="n">PR</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">develop</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">lint</span><span class="w"> </span><span class="n">result</span>
+</code></pre></div>
+
+<p>Step by step (matches Run Guide steps 1, 2 and 9):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Command</th>
+<th>Output committed to the PR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fetch</td>
+<td><code>python scripts/fetch_from_sharepoint.py --id &lt;ID&gt; --sharepoint-path &lt;path&gt; --out-dir &lt;tmp&gt; --lock source_docs.lock.json</code></td>
+<td><code>source_docs.lock.json</code></td>
+</tr>
+<tr>
+<td>Extract</td>
+<td><code>python scripts/extract_interface_from_docx[_xml].py &lt;docx&gt; --id &lt;ID&gt; --name &lt;NAME&gt; --out-dir domains/&lt;domain&gt;</code></td>
+<td><code>fields.draft.yaml</code>, <code>interfaces.draft.yaml</code>, <code>REVIEW_REPORT.md</code></td>
+</tr>
+<tr>
+<td>Lint</td>
+<td><code>python scripts/lint_source_document.py &lt;docx&gt; --out-dir domains/&lt;domain&gt;</code></td>
+<td><code>DOC_QUALITY_REPORT.md</code></td>
+</tr>
+<tr>
+<td>Tracker</td>
+<td><code>python scripts/generate_findings_tracker.py --domain-dir … --domain-name … --interface-id … --out …/&lt;ID&gt;_Findings_Tracker.xlsx</code></td>
+<td>Uploaded as artifact (not committed)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PR labelling by lint result</strong></p>
+<table>
+<thead>
+<tr>
+<th>Lint result</th>
+<th>Label</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 blocking findings</td>
+<td><code>ready-for-review</code></td>
+<td>Reviewer can promote and merge</td>
+</tr>
+<tr>
+<td>Blocking findings</td>
+<td><code>vendor-fix-required</code></td>
+<td>PR cannot merge until the vendor reissues the document (a new Ingest run updates the PR) or an approver adds a documented waiver label</td>
+</tr>
+</tbody>
+</table>
+<p>The PR body summarises: field count, review-flagged fields, lint counts by severity, and links to the tracker and reports.</p>
+<h2 id="7-stage-2-human-review-inside-the-pr">7. Stage 2 — human review inside the PR</h2>
+<p>This is the only manual step, preserved on purpose.</p>
+<ol>
+<li>Reviewer opens the PR and reads <code>REVIEW_REPORT.md</code> and <code>DOC_QUALITY_REPORT.md</code>.</li>
+<li>Reviewer edits the draft YAML in the PR branch: sensitivity, mandatory/conditional, public constants.</li>
+<li>Reviewer <strong>promotes</strong>: renames <code>fields.draft.yaml</code> → <code>fields.yaml</code> and <code>interfaces.draft.yaml</code> → <code>interfaces.yaml</code>, and removes any full field definition that already exists in another domain (shared meta fields such as <code>meta-senderid</code>), keeping only the reference.</li>
+<li>The Build workflow runs automatically on the PR and must pass.</li>
+<li>Approver (CODEOWNER) approves and merges to <code>develop</code>.</li>
+</ol>
+<p>Optional improvement: a PR comment command <code>/promote</code> backed by a generic <code>scripts/promote_draft.py</code> (the existing <code>promote_cv07_draft.py</code> is CV07-specific) so promotion does not need local tooling.</p>
+<h2 id="8-workflow-2-build-validate-generate-build-ui">8. Workflow 2 — Build (validate, generate, build UI)</h2>
+<p>Runs on every pull request and every push to <code>develop</code>/<code>main</code>. Mirrors Run Guide steps 4 to 9, then the UI.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Step</th>
+<th>Command</th>
+<th>Fails the build when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Install Python deps</td>
+<td><code>pip install -r requirements.txt</code></td>
+<td>Dependency resolution fails</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Validate</td>
+<td><code>python scripts/validate_all.py</code></td>
+<td>Any record fails schema, unresolved reference, duplicate id</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Compile</td>
+<td><code>python scripts/compile_knowledge_hub.py --out &lt;ui&gt;/src/data/exampleData.js</code></td>
+<td>Validation fails (it re-runs validation)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>OpenAPI</td>
+<td><code>python scripts/generate_openapi.py --out-dir &lt;ui&gt;/public/openapi</code></td>
+<td>Any spec fails <code>openapi_spec_validator</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Run reports <em>(planned)</em></td>
+<td><code>generate_run_report.py</code> per manifest interface, then <code>md_to_html.py</code></td>
+<td>Script error (an <code>Overall: FAIL</code> verdict is reported, not fatal; see 8.1)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Findings tracker <em>(planned)</em></td>
+<td><code>generate_findings_tracker.py</code> per interface</td>
+<td>Script error</td>
+</tr>
+<tr>
+<td>7</td>
+<td>UI install</td>
+<td><code>npm ci</code></td>
+<td>Lockfile mismatch</td>
+</tr>
+<tr>
+<td>8</td>
+<td>UI lint</td>
+<td><code>npm run lint</code> (oxlint)</td>
+<td>Lint errors</td>
+</tr>
+<tr>
+<td>9</td>
+<td>UI build</td>
+<td><code>npm run build</code></td>
+<td>Build error</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Stamp</td>
+<td>writes the commit SHA to <code>dist/version.txt</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Upload</td>
+<td>artifact <code>site</code> (dist incl. <code>/openapi</code>), artifact <code>reports</code> (HTML, xlsx)</td>
+<td>No files produced</td>
+</tr>
+</tbody>
+</table>
+<p>Notes:
+- The compile step overwrites the UI's <code>exampleData.js</code> <strong>inside the CI workspace only</strong>; the hand-written demo file in git is untouched.
+- OpenAPI files are copied into the UI's <code>public/openapi</code>, so the same deployed site also serves the specs.
+- Python is pinned to 3.12 in CI. Local runs on 3.14/3.15 are supported by the offline wheel bundles but should be validated against 3.12 once (see risks).</p>
+<h3 id="81-handling-overall-fail-in-run-reports">8.1 Handling <code>Overall: FAIL</code> in run reports</h3>
+<p>A run report can say FAIL because the vendor document has blocking findings. Policy:</p>
+<ul>
+<li>The Build job still completes and publishes the report (so people can read it).</li>
+<li>Ingest PRs carry the <code>vendor-fix-required</code> label until resolved (section 6).</li>
+<li>Merging to <code>develop</code> or <code>main</code> requires that label to be absent, enforced by a required status check that reads the report verdict.</li>
+</ul>
+<h2 id="9-workflow-3-deploy-to-the-vm-dev-and-uat">9. Workflow 3 — Deploy to the VM (Dev and UAT)</h2>
+<h3 id="91-vm-layout">9.1 VM layout</h3>
+<div class="codehilite"><pre><span></span><code><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">knowledge</span><span class="o">-</span><span class="n">hub</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">dev</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">releases</span><span class="o">/</span><span class="mi">20261118101500</span><span class="o">-</span><span class="n">ab12cd3</span><span class="o">/</span><span class="w">   </span><span class="p">(</span><span class="n">immutable</span><span class="w"> </span><span class="n">build</span><span class="p">)</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span><span class="w">                         </span><span class="p">(</span><span class="n">last</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="n">kept</span><span class="p">)</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">current</span><span class="w">  </span><span class="err">──</span><span class="n">symlink</span><span class="err">──▶</span><span class="w">  </span><span class="n">releases</span><span class="o">/</span><span class="mi">20261118101500</span><span class="o">-</span><span class="n">ab12cd3</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">uat</span><span class="o">/</span>
+<span class="w">    </span><span class="err">├──</span><span class="w"> </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span>
+<span class="w">    </span><span class="err">└──</span><span class="w"> </span><span class="n">current</span><span class="w">  </span><span class="err">──</span><span class="n">symlink</span><span class="err">──▶</span><span class="w">  </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span>
+</code></pre></div>
+
+<p>nginx serves <code>dev/current</code> on <strong>8081</strong> and <code>uat/current</code> on <strong>8080</strong> (<a href="../deploy/nginx/knowledge-hub.conf">deploy/nginx/knowledge-hub.conf</a>). Because the site is static with hash routing, nginx needs only one-time configuration; deployments never reload nginx.</p>
+<h3 id="92-what-a-deployment-does-deploydeploysh">9.2 What a deployment does (<a href="../deploy/deploy.sh">deploy/deploy.sh</a>)</h3>
+<ol>
+<li>Copies the built site into a new timestamped release folder.</li>
+<li>Atomically switches the <code>current</code> symlink to it (<code>mv -Tf</code>), so users never see a half-copied site.</li>
+<li>Calls <code>http://127.0.0.1:&lt;port&gt;/version.txt</code> and checks it returns the exact commit SHA being deployed.</li>
+<li>If the check fails, switches <code>current</code> back to the previous release and exits non-zero (the GitHub job fails).</li>
+<li>Prunes to the newest 5 releases.</li>
+</ol>
+<p><strong>Rollback:</strong> automatic on failed health check. Manual: point <code>current</code> at an earlier release folder, or re-run the workflow on an earlier commit (<code>workflow_dispatch</code>).</p>
+<h3 id="93-the-self-hosted-runner">9.3 The self-hosted runner</h3>
+<ul>
+<li>Installed on the VM as a service under a dedicated low-privilege user.</li>
+<li>Label: <code>knowledge-hub</code>. Outbound HTTPS to GitHub only; no inbound ports.</li>
+<li>The user owns <code>/var/www/knowledge-hub</code> and needs <strong>no sudo</strong>.</li>
+<li>Contains no SharePoint or Graph credentials.</li>
+<li>Keep the runner software auto-updated, and restrict the repository's workflows to this runner for the Deploy jobs only.</li>
+</ul>
+<h3 id="94-approval-for-uat">9.4 Approval for UAT</h3>
+<p>GitHub environment <code>uat</code> has <strong>Required reviewers</strong>. The Deploy-UAT job pauses until a named approver (UAT owner) approves in GitHub. Approver identity and time are recorded in the run history.</p>
+<h2 id="10-end-to-end-walkthrough-cv07_02-revised-by-the-vendor">10. End-to-end walkthrough (CV07_02 revised by the vendor)</h2>
+<ol>
+<li>Vendor uploads revised <code>CV07_02_TMS_2_SHIP_EVENTS.docx</code> to SharePoint and sets "Ready for ingestion".</li>
+<li>Power Automate calls <code>repository_dispatch</code>. Ingest starts.</li>
+<li>Ingest finds the SHA differs from the lock file, extracts and lints, and opens PR <code>ingest/CV07_02</code> to <code>develop</code> labelled <code>ready-for-review</code> (or <code>vendor-fix-required</code>).</li>
+<li>The integration reviewer applies judgement calls, promotes the drafts, pushes to the PR branch.</li>
+<li>Build runs on the PR: validate, compile, OpenAPI, reports, UI build all pass; preview artifact and reports are attached.</li>
+<li>CODEOWNER approves and merges. Build runs on <code>develop</code>; Deploy-Dev publishes to <code>:8081</code>. Reports and OpenAPI files are published to the SharePoint <code>Pipeline Outputs</code> folder.</li>
+<li>Integration team verifies the glossary at <code>:8081</code>.</li>
+<li>A PR <code>develop → main</code> is raised for UAT sign-off. After merge and approval from the UAT owner, the same process deploys to <code>:8080</code>.</li>
+<li>UAT users see the updated glossary. The commit SHA is visible at <code>:8080/version.txt</code>.</li>
+</ol>
+<h2 id="11-configuration-reference">11. Configuration reference</h2>
+<p><strong>GitHub repository variables</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Example</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VM_HOST</code></td>
+<td><code>kh-vm.company.local</code></td>
+<td>Environment URLs</td>
+</tr>
+<tr>
+<td><code>SP_TENANT_ID</code></td>
+<td><code>…</code></td>
+<td>Ingest, publish</td>
+</tr>
+<tr>
+<td><code>SP_CLIENT_ID</code></td>
+<td><code>…</code></td>
+<td>Ingest, publish</td>
+</tr>
+<tr>
+<td><code>SP_SITE</code></td>
+<td><code>contoso.sharepoint.com:/sites/IntegrationHub</code></td>
+<td>Ingest, publish</td>
+</tr>
+<tr>
+<td><code>SP_SPECS_FOLDER</code></td>
+<td><code>/Integration Specs</code></td>
+<td>Ingest</td>
+</tr>
+<tr>
+<td><code>SP_OUTPUTS_FOLDER</code></td>
+<td><code>/Pipeline Outputs</code></td>
+<td>Publish</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GitHub secrets</strong> (environment- or repository-level): <code>SP_CLIENT_SECRET</code> or certificate (omit when using OIDC federation); <code>SYNC_TOKEN</code> (PAT or GitHub App token, used by Ingest and Sync so their PRs trigger Build); the token Power Automate uses to call GitHub lives in Power Automate, not in GitHub.</p>
+<p><strong>GitHub environments:</strong> <code>dev</code> (no rules), <code>uat</code> (required reviewers).</p>
+<p><strong>Repository files</strong> (<code>pipeline/</code> below means the Python pipeline folder, currently <code>Knowledge_Hub_Build_Pipeline_4/Knowledge_Hub_Build_Pipeline_4/</code>; the workflow variables <code>PIPELINE_DIR</code> and <code>UI_DIR</code> hold the real paths)</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.github/workflows/knowledge-hub.yml</code></td>
+<td>Build and Deploy</td>
+<td>Created</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ingest.yml</code></td>
+<td>SharePoint ingest</td>
+<td>Created</td>
+</tr>
+<tr>
+<td><code>deploy/deploy.sh</code>, <code>deploy/nginx/*.conf</code></td>
+<td>VM deployment</td>
+<td>Created</td>
+</tr>
+<tr>
+<td><code>pipeline/requirements.txt</code></td>
+<td>Python dependencies</td>
+<td>Created</td>
+</tr>
+<tr>
+<td><code>pipeline/interfaces.manifest.yaml</code></td>
+<td>Document → id/name/domain/template/variant mapping</td>
+<td>Created (all entries disabled)</td>
+</tr>
+<tr>
+<td><code>pipeline/scripts/ingest_manifest.py</code></td>
+<td>Validates the manifest and builds the ingest matrix</td>
+<td>Created</td>
+</tr>
+<tr>
+<td><code>pipeline/source_docs.lock.json</code></td>
+<td>Source document version/hash record</td>
+<td>Written by Ingest PRs</td>
+</tr>
+<tr>
+<td><code>pipeline/scripts/fetch_from_sharepoint.py</code></td>
+<td>Graph download</td>
+<td>Created (publish to SharePoint still to build)</td>
+</tr>
+<tr>
+<td><code>pipeline/scripts/promote_draft.py</code></td>
+<td>Generic promote</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="12-security-and-compliance">12. Security and compliance</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Untrusted <code>.docx</code> input</td>
+<td>Only manifest-listed files; <code>.docx</code> only (no macro formats); file size limit; parsed on ephemeral GitHub-hosted runner; deleted after the run</td>
+</tr>
+<tr>
+<td>Over-broad SharePoint access</td>
+<td><code>Sites.Selected</code> on one site; separate read (Specs) and write (Outputs) locations</td>
+</tr>
+<tr>
+<td>Credential leakage</td>
+<td>OIDC federation or short-lived secrets in GitHub environment secrets; none on the VM</td>
+</tr>
+<tr>
+<td>Unreviewed data reaching users</td>
+<td>PR review required; branch protection; CODEOWNERS on <code>domains/**</code>; Stage 2 never bypassed</td>
+</tr>
+<tr>
+<td>Tampered deploy</td>
+<td>Deploy job downloads only the artifact produced by Build for that commit; version.txt must match SHA</td>
+</tr>
+<tr>
+<td>Supply chain</td>
+<td>Pinned Python and Node versions; lockfiles; Dependabot; <code>pip-audit</code> and <code>npm audit</code> in Build</td>
+</tr>
+<tr>
+<td>Data exposure</td>
+<td>Site is internal; place nginx behind the corporate network or SSO reverse proxy; glossary contains sensitivity labels (PII/confidential) but no record data</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>Every change traceable: SharePoint item/eTag → lock file → PR → commit SHA → artifact → release folder → <code>version.txt</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="13-implementation-plan">13. Implementation plan</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Deliverable</th>
+<th>Depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Create git repo, branches (<code>develop</code>, <code>main</code>), branch protection, environments, <code>VM_HOST</code> variable</td>
+<td>—</td>
+</tr>
+<tr>
+<td>1</td>
+<td>VM setup: nginx, folders, firewall for 8080/8081, self-hosted runner (label <code>knowledge-hub</code>)</td>
+<td>Phase 0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Build and Deploy workflows operating on committed YAML</td>
+<td>Phase 1 (<strong>files already created</strong>)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Entra app registration, <code>Sites.Selected</code> grant, SharePoint libraries</td>
+<td>Tenant admin</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>fetch_from_sharepoint.py</code>, manifest, lock file, <code>ingest.yml</code>, PR creation and labels</td>
+<td>Phase 3</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Add run report, HTML and tracker steps to Build; publish outputs back to SharePoint</td>
+<td>Phase 4</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Power Automate event trigger plus schedule safety net</td>
+<td>Phase 4</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Required status check for <code>vendor-fix-required</code>; security scans; pytest golden tests on the two sample documents</td>
+<td>Phase 5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="14-risks-and-open-decisions">14. Risks and open decisions</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Risk</th>
+<th>Proposed handling / decision needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SharePoint is on-premises</td>
+<td>Graph unavailable</td>
+<td>Use a self-hosted runner and SharePoint REST; design otherwise unchanged</td>
+</tr>
+<tr>
+<td>Python version difference (3.14/3.15 local vs 3.12 in CI)</td>
+<td>Behaviour differences</td>
+<td>Run the full pipeline once on 3.12 against CV07_01/CV07_02 and compare outputs</td>
+</tr>
+<tr>
+<td>VM has no internet</td>
+<td>Cannot <code>pip install</code></td>
+<td>Not needed for Deploy (static files only); Build runs on GitHub-hosted runners</td>
+</tr>
+<tr>
+<td>Partial saves in SharePoint</td>
+<td>Spurious ingest runs</td>
+<td>"Ready for ingestion" column or content approval; SHA check suppresses no-change runs</td>
+</tr>
+<tr>
+<td>Lint-blocking findings policy</td>
+<td>Blocks UAT if too strict</td>
+<td>Decide whether waivers are allowed, and who approves them</td>
+</tr>
+<tr>
+<td>UAT approver</td>
+<td>Gate ownership</td>
+<td>Name the GitHub reviewers/team for <code>uat</code></td>
+</tr>
+<tr>
+<td>Authentication for UAT users</td>
+<td>Open ports on internal network</td>
+<td>Decide on SSO or reverse proxy in front of 8080</td>
+</tr>
+<tr>
+<td>Single VM</td>
+<td>Single point of failure for both environments</td>
+<td>Acceptable for UAT/Dev; releases are immutable and rebuildable from Git in minutes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="15-operations">15. Operations</h2>
+<ul>
+<li><strong>Monitoring:</strong> GitHub Actions run history (failure notifications to email/Teams); a scheduled health check of <code>:8080/version.txt</code> and <code>:8081/version.txt</code> from the same workflow; nginx access and error logs on the VM.</li>
+<li><strong>Disk:</strong> only 5 releases per environment are kept.</li>
+<li><strong>Re-run a deployment:</strong> Actions → workflow → "Run workflow" on the desired commit.</li>
+<li><strong>Onboard a new interface:</strong> add a manifest entry (PR), upload the document to SharePoint, wait for the ingest PR, review, merge.</li>
+<li><strong>Rotate credentials:</strong> replace the SharePoint client secret/certificate in GitHub secrets; with OIDC federation there is nothing to rotate.</li>
+</ul>
+<hr />
+<h2 id="16-multiple-pipeline-variants-with-one-common-ui">16. Multiple pipeline variants with one common UI</h2>
+<p>Some pipelines differ slightly from the base (different extractor behaviour, schema additions, domain sets). This section defines how to keep each variant in its own branch <strong>without</strong> letting the UI or the deployment tooling drift.</p>
+<h3 id="161-options-considered">16.1 Options considered</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+<th>Strength</th>
+<th>Weakness</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. Trunk plus config profiles</td>
+<td>One <code>main</code>; differences expressed as per-variant config and domain folders</td>
+<td>No drift, simplest</td>
+<td>Needs the differences to be expressible as config</td>
+<td>Best long-term target</td>
+</tr>
+<tr>
+<td><strong>B. Long-lived variant branches</strong></td>
+<td>One <code>variant/&lt;name&gt;</code> branch per pipeline, kept in sync with <code>main</code></td>
+<td>Isolates code changes per variant</td>
+<td>Drift and merge conflicts if not governed</td>
+<td><strong>Chosen for now, with the controls below</strong></td>
+</tr>
+<tr>
+<td>C. Separate repositories</td>
+<td>UI repo plus one repo per pipeline</td>
+<td>Hard isolation</td>
+<td>Highest overhead; UI version coordination</td>
+<td>Consider if variants exceed about 4 or have different owners</td>
+</tr>
+</tbody>
+</table>
+<p>Rule of thumb: if a variant difference can be a setting, put it in config on <code>main</code>; use a variant branch only for real code differences. Review each variant's diff quarterly and fold shared changes back into <code>main</code>.</p>
+<h3 id="162-branch-model">16.2 Branch model</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">main</span><span class="w"> </span><span class="p">(</span><span class="n">common</span><span class="w"> </span><span class="n">baseline</span><span class="p">:</span><span class="w"> </span><span class="n">UI</span><span class="p">,</span><span class="w"> </span><span class="n">deploy</span><span class="p">,</span><span class="w"> </span><span class="n">shared</span><span class="w"> </span><span class="n">scripts</span><span class="p">)</span><span class="w">  </span><span class="err">──</span><span class="w"> </span><span class="n">tags</span><span class="w"> </span><span class="n">v1</span><span class="o">.</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">v1</span><span class="o">.</span><span class="mf">1.0</span><span class="w"> </span><span class="err">…</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">develop</span><span class="w"> </span><span class="o">...............</span><span class="w"> </span><span class="n">integration</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">common</span><span class="w"> </span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">deploys</span><span class="w"> </span><span class="n">Dev</span><span class="w"> </span><span class="o">/</span><span class="n">default</span>
+<span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="err">└──</span><span class="w"> </span><span class="n">feature</span><span class="o">/*</span><span class="p">,</span><span class="w"> </span><span class="n">fix</span><span class="o">/*</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="n">short</span><span class="o">-</span><span class="n">lived</span><span class="p">,</span><span class="w"> </span><span class="n">PR</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">develop</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">variant</span><span class="o">/</span><span class="n">fms</span><span class="w"> </span><span class="o">...........</span><span class="w"> </span><span class="n">long</span><span class="o">-</span><span class="n">lived</span><span class="p">;</span><span class="w"> </span><span class="n">only</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">FMS</span><span class="w"> </span><span class="n">pipeline</span><span class="w"> </span><span class="n">differences</span>
+<span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="err">└──</span><span class="w"> </span><span class="n">ingest</span><span class="o">/</span><span class="n">CV10_01</span><span class="w"> </span><span class="o">....</span><span class="w"> </span><span class="n">bot</span><span class="w"> </span><span class="n">PRs</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">FMS</span><span class="w"> </span><span class="n">documents</span>
+<span class="w">  </span><span class="err">├──</span><span class="w"> </span><span class="n">variant</span><span class="o">/</span><span class="n">shippeo</span><span class="w"> </span><span class="o">.......</span><span class="w"> </span><span class="n">long</span><span class="o">-</span><span class="n">lived</span><span class="p">;</span><span class="w"> </span><span class="n">only</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Shippeo</span><span class="w"> </span><span class="n">pipeline</span><span class="w"> </span><span class="n">differences</span>
+<span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="err">└──</span><span class="w"> </span><span class="n">ingest</span><span class="o">/</span><span class="n">CV07_02</span><span class="w"> </span><span class="o">....</span><span class="w"> </span><span class="n">bot</span><span class="w"> </span><span class="n">PRs</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Shippeo</span><span class="w"> </span><span class="n">documents</span>
+<span class="w">  </span><span class="err">└──</span><span class="w"> </span><span class="p">(</span><span class="n">more</span><span class="w"> </span><span class="n">variants</span><span class="p">)</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Branch</th>
+<th>Lifetime</th>
+<th>Created from</th>
+<th>Merges into</th>
+<th>Deploys to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main</code></td>
+<td>Permanent</td>
+<td>—</td>
+<td>—</td>
+<td>UAT, variant <code>default</code> (approval)</td>
+</tr>
+<tr>
+<td><code>develop</code></td>
+<td>Permanent</td>
+<td><code>main</code></td>
+<td><code>main</code> via PR</td>
+<td>Dev, variant <code>default</code></td>
+</tr>
+<tr>
+<td><code>feature/*</code>, <code>fix/*</code></td>
+<td>Days</td>
+<td><code>develop</code></td>
+<td><code>develop</code> via PR</td>
+<td>Build and preview only</td>
+</tr>
+<tr>
+<td><code>variant/&lt;name&gt;</code></td>
+<td>Permanent</td>
+<td><code>main</code></td>
+<td>Never into <code>main</code></td>
+<td>Dev, variant <code>&lt;name&gt;</code> on every merge</td>
+</tr>
+<tr>
+<td><code>ingest/&lt;id&gt;</code></td>
+<td>Until reviewed</td>
+<td>The variant (or <code>develop</code>) branch named in the manifest</td>
+<td>That same branch via PR</td>
+<td>Build only</td>
+</tr>
+<tr>
+<td>tag <code>uat/&lt;name&gt;/vX.Y.Z</code></td>
+<td>Immutable</td>
+<td>A commit on <code>variant/&lt;name&gt;</code></td>
+<td>—</td>
+<td>UAT, variant <code>&lt;name&gt;</code> (approval)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="163-rules-that-keep-the-ui-common">16.3 Rules that keep the UI common</h3>
+<ol>
+<li><strong>The UI is changed only on the common line:</strong> <code>feature/*</code> → <code>develop</code> → <code>main</code>. Variant branches never edit <code>ui/</code>, <code>deploy/</code> or <code>.github/</code>.</li>
+<li><strong>Common changes flow down, never up.</strong> Every merge to <code>main</code> is merged into every <code>variant/*</code> branch (section 16.5). If a variant fix is generally useful, re-apply it as a <code>feature/*</code> PR against <code>develop</code>.</li>
+<li><strong>A path guard enforces rule 1.</strong> A required check on every <code>variant/*</code> PR runs <code>git diff --name-only origin/main...HEAD</code> and fails if any file under <code>ui/</code>, <code>deploy/</code> or <code>.github/</code> differs. Variants may change only <code>pipeline/**</code> (and their own <code>domains/**</code>).</li>
+<li><strong>Variant-specific values live in one file:</strong> <code>pipeline/variants/&lt;name&gt;/variant.yaml</code> (name, domains, template defaults), so most variant differences are data, not code, and diffs stay small.</li>
+<li><strong>Branch protection</strong> on <code>main</code>, <code>develop</code> and the pattern <code>variant/*</code>: PR required, Build check required, CODEOWNERS review, no force-push, no direct commits.</li>
+<li><strong>Release names are tags, not branches,</strong> so UAT users always know exactly what they are testing.</li>
+</ol>
+<h3 id="164-how-the-ui-behaves-across-variants">16.4 How the UI behaves across variants</h3>
+<p>The UI source is identical everywhere. It imports one compiled data module, so each variant is the <strong>same UI code built with that variant's data</strong>.</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">ui</span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">common</span><span class="w"> </span><span class="n">source</span><span class="p">)</span><span class="w"> </span><span class="err">──┐</span>
+<span class="w">                       </span><span class="err">├─▶</span><span class="w"> </span><span class="n">npm</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">build</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="n">dist</span><span class="o">/</span><span class="w">  </span><span class="p">(</span><span class="n">UI</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="n">variant</span><span class="s1">'s data + OpenAPI)</span>
+<span class="w"> </span><span class="n">variant</span><span class="w"> </span><span class="n">data</span><span class="p">:</span><span class="w"> </span><span class="n">compile</span><span class="w"> </span><span class="err">┘</span><span class="w">                      </span><span class="n">deployed</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="o">/&lt;</span><span class="n">variant</span><span class="o">&gt;/</span>
+</code></pre></div>
+
+<ul>
+<li>Every variant build uses the UI as merged from <code>main</code>, so the UI version of a variant is simply the <code>main</code> version it last merged.</li>
+<li>Show the variant name and commit in the UI footer by writing them into <code>version.txt</code> (<code>&lt;variant&gt; &lt;sha&gt;</code>).</li>
+<li>If the number of variants grows, move the UI to its own repository and have each variant's Build check out a pinned UI tag (<code>UI_REF</code>), so a UI release is adopted by changing one line per variant.</li>
+</ul>
+<h3 id="165-cicd-for-variants">16.5 CI/CD for variants</h3>
+<p><strong>One shared set of workflows, identical on every branch.</strong> Put the build and deploy logic into reusable workflows (<code>workflow_call</code>) so branches never need to edit <code>.github/</code>, which removes the main source of merge conflicts.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">.</span><span class="n">github</span><span class="o">/</span><span class="n">workflows</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">knowledge</span><span class="o">-</span><span class="n">hub</span><span class="o">.</span><span class="n">yml</span><span class="w">     </span><span class="n">triggers</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">variant</span><span class="o">/</span><span class="n">env</span><span class="w"> </span><span class="n">resolution</span><span class="p">,</span><span class="w"> </span><span class="n">calls</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">two</span><span class="w"> </span><span class="n">below</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">_build</span><span class="o">.</span><span class="n">yml</span><span class="w">            </span><span class="n">reusable</span><span class="p">:</span><span class="w"> </span><span class="n">validate</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">compile</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">OpenAPI</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">reports</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">UI</span><span class="w"> </span><span class="n">build</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">_deploy</span><span class="o">.</span><span class="n">yml</span><span class="w">           </span><span class="n">reusable</span><span class="p">:</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">VM</span><span class="w"> </span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span><span class="w"> </span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">variant</span><span class="p">)</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">guard</span><span class="o">-</span><span class="n">variant</span><span class="o">.</span><span class="n">yml</span><span class="w">     </span><span class="n">PR</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">variant</span><span class="o">/*</span><span class="w"> </span><span class="p">(</span><span class="n">path</span><span class="w"> </span><span class="n">guard</span><span class="p">,</span><span class="w"> </span><span class="n">rule</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">sync</span><span class="o">-</span><span class="n">variants</span><span class="o">.</span><span class="n">yml</span><span class="w">     </span><span class="n">merges</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">each</span><span class="w"> </span><span class="n">variant</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="p">(</span><span class="n">below</span><span class="p">)</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">ingest</span><span class="o">.</span><span class="n">yml</span><span class="w">            </span><span class="n">SharePoint</span><span class="w"> </span><span class="n">ingest</span><span class="w"> </span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span><span class="w"> </span><span class="n">variant</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Resolving variant and environment from the Git ref</strong></p>
+<table>
+<thead>
+<tr>
+<th>Ref that triggered the run</th>
+<th>Variant</th>
+<th>Environment</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>develop</code></td>
+<td><code>default</code></td>
+<td>Dev</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>main</code></td>
+<td><code>default</code></td>
+<td>UAT</td>
+<td><code>uat</code> environment approval</td>
+</tr>
+<tr>
+<td><code>variant/&lt;name&gt;</code></td>
+<td><code>&lt;name&gt;</code></td>
+<td>Dev</td>
+<td>None</td>
+</tr>
+<tr>
+<td>tag <code>uat/&lt;name&gt;/vX.Y.Z</code></td>
+<td><code>&lt;name&gt;</code></td>
+<td>UAT</td>
+<td><code>uat</code> environment approval</td>
+</tr>
+<tr>
+<td>Pull request (any)</td>
+<td>—</td>
+<td>none</td>
+<td>Build and guard checks only</td>
+</tr>
+</tbody>
+</table>
+<p>Sketch of the resolution step:</p>
+<div class="codehilite"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target</span>
+<span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">ref="${GITHUB_REF}"</span>
+<span class="w">    </span><span class="no">case "$ref" in</span>
+<span class="w">      </span><span class="no">refs/heads/develop)      v=default; e=dev ;;</span>
+<span class="w">      </span><span class="no">refs/heads/main)         v=default; e=uat ;;</span>
+<span class="w">      </span><span class="no">refs/heads/variant/*)    v="${ref#refs/heads/variant/}"; e=dev ;;</span>
+<span class="w">      </span><span class="no">refs/tags/uat/*/v*)      t="${ref#refs/tags/uat/}"; v="${t%%/*}"; e=uat ;;</span>
+<span class="w">      </span><span class="no">*)                       v=""; e="" ;;</span>
+<span class="w">    </span><span class="no">esac</span>
+<span class="w">    </span><span class="no">echo "variant=$v" &gt;&gt; "$GITHUB_OUTPUT"; echo "env=$e" &gt;&gt; "$GITHUB_OUTPUT"</span>
+</code></pre></div>
+
+<p>Other CI/CD rules for variants:
+- <strong>Concurrency per target:</strong> <code>group: deploy-${{ env }}-${{ variant }}</code>, so two variants can deploy in parallel but one variant never overlaps itself.
+- <strong>Build once, deploy that artifact:</strong> the Deploy job always uses the artifact built from the same commit.
+- <strong>Ingest targets the right branch:</strong> the manifest gets a <code>variant:</code> field per interface; Ingest checks out <code>variant/&lt;name&gt;</code> and opens the PR against it.
+- <strong>Reports and outputs</strong> are published to <code>Pipeline Outputs/&lt;variant&gt;/</code>.</p>
+<p><strong>Automatic downstream sync (<code>sync-variants.yml</code>)</strong></p>
+<p>On every push to <code>main</code> (and weekly), for each <code>origin/variant/*</code> branch:
+1. Try <code>git merge origin/main</code>.
+2. If it merges cleanly, push it to a short-lived <code>sync/&lt;name&gt;</code> branch and open a PR to the variant (so Build and the guard run before it lands).
+3. If it conflicts, open a PR with the conflict marked and assign the variant owner.
+4. Include <code>git diff --stat origin/main...variant/&lt;name&gt;</code> in the PR body as a drift report.</p>
+<h3 id="166-hosting-several-variants-on-one-vm-with-two-ports">16.6 Hosting several variants on one VM with two ports</h3>
+<p>Keep exactly two ports. Variants become <strong>sub-paths</strong>: <code>:8080/&lt;variant&gt;/</code> for UAT and <code>:8081/&lt;variant&gt;/</code> for Dev. This works with the current build because the UI uses <code>base: './'</code> and hash routing.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">knowledge</span><span class="o">-</span><span class="n">hub</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">dev</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">default</span><span class="o">/</span><span class="w">   </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="err">…</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">fms</span><span class="o">/</span><span class="w">       </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="err">…</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">shippeo</span><span class="o">/</span><span class="w">   </span><span class="n">releases</span><span class="o">/</span><span class="err">…</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="err">─▶</span><span class="w"> </span><span class="err">…</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">uat</span><span class="o">/</span>
+<span class="w">    </span><span class="err">├──</span><span class="w"> </span><span class="n">default</span><span class="o">/</span><span class="w"> </span><span class="err">…</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">fms</span><span class="o">/</span><span class="w"> </span><span class="err">…</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">shippeo</span><span class="o">/</span><span class="w"> </span><span class="err">…</span>
+
+<span class="n">URLs</span><span class="p">:</span><span class="w">  </span><span class="n">http</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">vm</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">8081</span><span class="o">/</span><span class="n">fms</span><span class="o">/</span><span class="w">      </span><span class="n">Dev</span><span class="w"> </span><span class="n">FMS</span>
+<span class="w">       </span><span class="n">http</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">vm</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">8080</span><span class="o">/</span><span class="n">shippeo</span><span class="o">/</span><span class="w">  </span><span class="n">UAT</span><span class="w"> </span><span class="n">Shippeo</span>
+</code></pre></div>
+
+<p>nginx (replaces the per-server <code>root</code> with a variant-aware lookup):</p>
+<div class="codehilite"><pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">8080</span><span class="p">;</span><span class="w">                      </span><span class="c1"># UAT (8081 identical with /dev)</span>
+<span class="w">    </span><span class="kn">root</span><span class="w"> </span><span class="s">/var/www/knowledge-hub/uat</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">^/(?&lt;variant&gt;[a-z0-9_-]+)/(?&lt;rest&gt;.*)$</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="s">/</span><span class="nv">$variant/current/$rest</span><span class="w"> </span><span class="s">/</span><span class="nv">$variant/current/$rest/index.html</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kn">return</span><span class="w"> </span><span class="mi">302</span><span class="w"> </span><span class="s">/default/</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Implemented in the repository:
+- <code>deploy/deploy.sh</code> takes a variant (<code>deploy.sh &lt;env&gt; &lt;variant&gt; &lt;site-dir&gt; &lt;sha&gt;</code>), writes to <code>&lt;env&gt;/&lt;variant&gt;/releases</code>, and health-checks <code>/&lt;variant&gt;/version.txt</code>.
+- <code>deploy/nginx/*.conf</code> contain the variant-aware lookup.
+- Workflows: <code>knowledge-hub.yml</code> (ref → variant/env), <code>_build.yml</code>, <code>_deploy.yml</code>, <code>guard-variant.yml</code>, <code>sync-variants.yml</code>.
+- Variant names are restricted to <code>[a-z0-9_-]</code>, so a branch name can never become an arbitrary path.
+- <code>sync-variants.yml</code> needs a <code>SYNC_TOKEN</code> secret (PAT or GitHub App token), because PRs created with the default token do not trigger Build or the guard.</p>
+<h3 id="167-end-to-end-example-a-shippeo-only-change">16.7 End-to-end example: a Shippeo-only change</h3>
+<ol>
+<li>Developer creates <code>feature/shippeo-timezone</code> from <code>variant/shippeo</code>, changes <code>pipeline/scripts/extract_interface_from_docx.py</code> and the variant config.</li>
+<li>PR to <code>variant/shippeo</code>: Build and the path guard pass (only <code>pipeline/**</code> touched). Reviewer merges.</li>
+<li>Dev deploys to <code>http://&lt;vm&gt;:8081/shippeo/</code>. Integration team verifies.</li>
+<li>Release manager tags <code>uat/shippeo/v1.3.0</code> on that commit. The <code>uat</code> approver approves, and UAT users get <code>http://&lt;vm&gt;:8080/shippeo/</code>.</li>
+<li>Meanwhile, a UI fix merges to <code>main</code>. <code>sync-variants.yml</code> opens <code>sync/shippeo</code> and <code>sync/fms</code> PRs. After their checks pass they merge, and each variant picks up the new UI at its next Dev deploy and UAT tag.</li>
+</ol>
+<h3 id="168-controls-summary">16.8 Controls summary</h3>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UI drift across variants</td>
+<td>Path guard plus main-to-variant sync</td>
+</tr>
+<tr>
+<td>Variant drift in code</td>
+<td>Drift report on every sync PR; quarterly review; move shared changes to <code>main</code></td>
+</tr>
+<tr>
+<td>Workflow conflicts</td>
+<td>Reusable workflows; <code>.github/**</code> identical on all branches</td>
+</tr>
+<tr>
+<td>Wrong variant deployed</td>
+<td>Variant derived only from the Git ref; strict name pattern; concurrency group per target</td>
+</tr>
+<tr>
+<td>UAT traceability</td>
+<td>Immutable <code>uat/&lt;variant&gt;/vX.Y.Z</code> tags; <code>version.txt</code> shows variant and SHA</td>
+</tr>
+<tr>
+<td>Access</td>
+<td>CODEOWNERS per variant folder; <code>uat</code> environment reviewers</td>
+</tr>
+</tbody>
+</table>
+  <footer>Generated from <code>CI_CD_Pipeline_Design.md</code> for the Groupe CAT VIP — Integration Knowledge Hub build.</footer>
+</div>
+</body>
+</html>

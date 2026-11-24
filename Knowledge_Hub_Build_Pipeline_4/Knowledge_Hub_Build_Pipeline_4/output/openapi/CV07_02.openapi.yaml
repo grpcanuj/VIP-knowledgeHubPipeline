@@ -1,0 +1,250 @@
+openapi: 3.0.3
+info:
+  title: CV07_02_TMS_2_SHIP_EVENTS
+  version: V1.0
+  description: '
+
+
+    (Generated from a vendor Word-template document via the Knowledge Hub pipeline - see spec_type/spec_version
+    in interfaces.yaml. Not yet a vendor-supplied OpenAPI spec.)'
+servers:
+- url: https://TBD/api/v1
+  description: Production - endpoint not yet finalized by the vendor
+- url: https://TBD-test/api/v1
+  description: Test / UAT - endpoint not yet finalized by the vendor
+tags:
+- name: TBD
+  description: Operations for CV07_02_TMS_2_SHIP_EVENTS
+paths:
+  /TBD:
+    post:
+      tags:
+      - TBD
+      summary: CV07_02_TMS_2_SHIP_EVENTS
+      description: ''
+      operationId: cV0702
+      responses:
+        '202':
+          description: The event request is syntactically valid and successfully queued by Shippeo for
+            processing.
+        '400':
+          description: Schema validation failure, invalid ISO date format, missing required parameters,
+            or unrecognized eventCode.
+        '401':
+          description: Invalid, expired, or missing Bearer authentication token.
+        '404':
+          description: Target orderId, orderReference, or technicalReference does not exist in Shippeo.
+        '520':
+          description: Transient internal failure on Shippeo side. The AndSoft TMS must automatically
+            replay the identical call up to 5 retries.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CV07_02Request'
+components:
+  schemas:
+    CV07_02Request:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            senderId:
+              type: string
+              maxLength: 35
+              description: 'Fixed value: CAT2020'
+              example: CAT2020
+            duplicateReceiverId:
+              type: string
+              maxLength: 35
+              description: 'Fixed value: shippeo'
+              example: shippeo
+            messageType:
+              type: string
+              maxLength: 6
+              description: 'Fixed value: GTF511'
+              example: GTF514
+            messageDate:
+              type: string
+              format: date-time
+              description: Date of the message
+            messageFunction:
+              type: string
+              maxLength: 1
+              description: 'Fixed value: 0'
+              example: 9 (Original / Event message)
+            messageReference:
+              type: string
+              maxLength: 35
+              description: Unique reference of the message (counter)
+          required:
+          - duplicateReceiverId
+          - messageDate
+          - messageFunction
+          - messageReference
+          - messageType
+          - senderId
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              eventReference:
+                type: string
+                maxLength: 35
+                description: Unique identifier of the event record in TMS
+              technicalReference:
+                type: string
+                maxLength: 35
+                description: Concatenation of chassis number and lot number
+              orderReference:
+                type: string
+                maxLength: 35
+                description: Transport order reference matching PLN
+              eventCode / eventName:
+                type: string
+                maxLength: 35
+                description: Normalized milestone code (CON_LOAD, CON_UNLOAD, DELIVERED...)
+              situationCode:
+                type: string
+                maxLength: 10
+                description: 'Situation code (ECH: Load, LIV: Deliv, ENE: Anomaly)'
+              justificationCode:
+                type: string
+                maxLength: 10
+                description: 'Justification code (CFM: Conform, NCF: Damage, MQT: Missing)'
+              eventDateTime / eventDate:
+                type: string
+                format: date-time
+                description: Real execution timestamp (ISO 8601 UTC)
+              eventSource / triggerSource:
+                type: string
+                maxLength: 20
+                description: Origin of validation (TMS, WMS, DRIVER_APP, DISPATCHER)
+              stopType:
+                type: string
+                maxLength: 20
+                description: PICKUP / DELIVERY / INTERMEDIATE
+              location:
+                type: object
+                properties:
+                  identifier / externalId:
+                    type: string
+                    maxLength: 35
+                    description: TMS site partner code (e.g. CEN01000-0004)
+                  qualifier:
+                    type: string
+                    maxLength: 3
+                    description: 'Fixed value: ZZ'
+                    example: ZZ
+                  name:
+                    type: string
+                    maxLength: 70
+                    description: Location name
+                  city:
+                    type: string
+                    maxLength: 35
+                    description: City of the event site
+                  zip / zipCode:
+                    type: string
+                    maxLength: 10
+                    description: Postal code
+                  country:
+                    type: string
+                    maxLength: 2
+                    description: ISO-2 Country code
+                  latitude / longitude:
+                    type: number
+                    format: float
+                    description: GPS coordinates
+                required:
+                - city
+                - country
+                - identifier / externalId
+                - latitude / longitude
+                - name
+                - qualifier
+                - zip / zipCode
+              actor:
+                type: object
+                properties:
+                  organization:
+                    type: string
+                    maxLength: 35
+                    description: 'Fixed value: GROUPE CAT'
+                    example: GROUPE CAT
+                  agency:
+                    type: string
+                    maxLength: 35
+                    description: CAT Agency / Carrier of publication (e.g. TC BASSENS (FR))
+                  userId:
+                    type: string
+                    maxLength: 35
+                    description: Login of operator / dispatcher
+                required:
+                - agency
+                - organization
+                - userId
+              reason:
+                type: object
+                properties:
+                  reasonCode:
+                    type: string
+                    maxLength: 35
+                    description: Incident classification code (e.g. TRAFFIC, BREAKDOWN)
+                  comment:
+                    type: string
+                    maxLength: 512
+                    description: Free comment or description
+                required:
+                - comment
+                - reasonCode
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reference:
+                      type: string
+                      maxLength: 35
+                      description: VIN number of the vehicle
+                    ean:
+                      type: string
+                      maxLength: 35
+                      description: Chassis number of the vehicle
+                    itemStatus:
+                      type: string
+                      maxLength: 35
+                      description: Item status (LOADED, DELIVERED, DAMAGED, MISSING)
+                  required:
+                  - ean
+                  - itemStatus
+                  - reference
+              documents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    documentType:
+                      type: string
+                      maxLength: 35
+                      description: POD, CMR_SIGNATURE, DAMAGE_PICTURE
+                    documentUrl:
+                      type: string
+                      maxLength: 255
+                      description: URL to download document / photo
+                  required:
+                  - documentType
+                  - documentUrl
+            required:
+            - eventCode / eventName
+            - eventDateTime / eventDate
+            - eventReference
+            - eventSource / triggerSource
+            - justificationCode
+            - orderReference
+            - situationCode
+            - stopType
+            - technicalReference

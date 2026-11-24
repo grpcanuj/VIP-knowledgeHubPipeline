@@ -1,0 +1,121 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OMS to TMS Order Create",
+    "version": "1.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "AndSoft OMS",
+      "description": "Operations for OMS to TMS Order Create"
+    }
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "tags": [
+          "AndSoft OMS"
+        ],
+        "summary": "OMS to TMS Order Create",
+        "description": "",
+        "operationId": "iF101",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IF-101Request"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IF-101Request": {
+        "type": "object",
+        "properties": {
+          "order-id": {
+            "type": "string",
+            "description": "Unique identifier for a transport order, assigned by OMS at creation."
+          },
+          "order-status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "created",
+              "planned",
+              "in-transit",
+              "delivered",
+              "cancelled"
+            ],
+            "description": "Current lifecycle state of the order as tracked across OMS and TMS.",
+            "example": "draft"
+          },
+          "order-date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date and time the order was created in OMS."
+          },
+          "customer-code": {
+            "type": "string",
+            "description": "Unique code identifying the customer/consignee for the order."
+          },
+          "origin-site": {
+            "type": "string",
+            "description": "Site code where the vehicles are picked up."
+          },
+          "destination-site": {
+            "type": "string",
+            "description": "Site code where the vehicles are to be delivered."
+          },
+          "vehicle-type": {
+            "type": "string",
+            "enum": [
+              "new-vehicle",
+              "used-vehicle",
+              "spare-parts",
+              "motorbike",
+              "agri-equipment"
+            ],
+            "description": "Category of vehicle covered by the order.",
+            "example": "new-vehicle"
+          },
+          "order-priority": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "urgent",
+              "critical"
+            ],
+            "description": "Business priority flag used by TMS planification to sequence transport.",
+            "example": "standard"
+          }
+        },
+        "required": [
+          "customer-code",
+          "destination-site",
+          "order-date",
+          "order-id",
+          "order-status",
+          "origin-site",
+          "vehicle-type"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interface Documentation Standard — for Andsoft</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f6f8fa;
+  --text: #1b1f24;
+  --text-muted: #57606a;
+  --border: #d8dee4;
+  --accent: #0b3d66;
+  --accent-2: #0e7c86;
+  --code-bg: #f6f8fa;
+  --blocking: #b42318;
+  --blocking-bg: #fdecea;
+  --advisory: #9a6700;
+  --advisory-bg: #fff8e6;
+  --info: #0b3d66;
+  --info-bg: #eaf2fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181f;
+    --bg-alt: #1b212b;
+    --text: #e6edf3;
+    --text-muted: #9aa7b2;
+    --border: #2d3540;
+    --accent: #7db2e8;
+    --accent-2: #5fc3cf;
+    --code-bg: #1b212b;
+    --blocking: #ff8c82;
+    --blocking-bg: #3a1b18;
+    --advisory: #e3b341;
+    --advisory-bg: #3a2f10;
+    --info: #7db2e8;
+    --info-bg: #142433;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+.masthead {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+}
+.masthead .kicker {
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.masthead h1 {
+  margin: 6px 0 4px;
+  font-size: 1.9rem;
+  color: var(--accent);
+}
+.masthead .meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+h1, h2, h3, h4 { color: var(--accent); scroll-margin-top: 20px; }
+h2 {
+  margin-top: 2.4em;
+  padding-top: 0.4em;
+  border-top: 1px solid var(--border);
+  font-size: 1.35rem;
+}
+h3 { font-size: 1.1rem; color: var(--accent-2); }
+p, li { font-size: 0.98rem; }
+a { color: var(--accent-2); }
+code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code { background: none; border: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 0.92rem; }
+th { background: var(--bg-alt); }
+blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--accent-2);
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border-radius: 0 6px 6px 0;
+}
+hr { border: none; border-top: 1px solid var(--border); margin: 2.5em 0; }
+.toc {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 24px 0 36px;
+}
+.toc > strong { display: block; margin-bottom: 8px; font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.toc ul { margin: 0; padding-left: 1.2em; columns: 1; }
+.toc li { font-size: 0.92rem; margin: 4px 0; }
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.badge-blocking { color: var(--blocking); background: var(--blocking-bg); }
+.badge-advisory { color: var(--advisory); background: var(--advisory-bg); }
+.badge-informational { color: var(--info); background: var(--info-bg); }
+footer {
+  margin-top: 4em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+</style>
+<style>pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #ffffcc }
+.codehilite { background: #f8f8f8; }
+.codehilite .c { color: #3D7B7B; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #F00 } /* Error */
+.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666 } /* Operator */
+.codehilite .ch { color: #3D7B7B; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #3D7B7B; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #9C6500 } /* Comment.Preproc */
+.codehilite .cpf { color: #3D7B7B; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #3D7B7B; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #3D7B7B; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #E40000 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #008400 } /* Generic.Inserted */
+.codehilite .go { color: #717171 } /* Generic.Output */
+.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #04D } /* Generic.Traceback */
+.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
+.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #B00040 } /* Keyword.Type */
+.codehilite .m { color: #666 } /* Literal.Number */
+.codehilite .s { color: #BA2121 } /* Literal.String */
+.codehilite .na { color: #687822 } /* Name.Attribute */
+.codehilite .nb { color: #008000 } /* Name.Builtin */
+.codehilite .nc { color: #00F; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #800 } /* Name.Constant */
+.codehilite .nd { color: #A2F } /* Name.Decorator */
+.codehilite .ni { color: #717171; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #CB3F38; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #00F } /* Name.Function */
+.codehilite .nl { color: #767600 } /* Name.Label */
+.codehilite .nn { color: #00F; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #19177C } /* Name.Variable */
+.codehilite .ow { color: #A2F; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #BBB } /* Text.Whitespace */
+.codehilite .mb { color: #666 } /* Literal.Number.Bin */
+.codehilite .mf { color: #666 } /* Literal.Number.Float */
+.codehilite .mh { color: #666 } /* Literal.Number.Hex */
+.codehilite .mi { color: #666 } /* Literal.Number.Integer */
+.codehilite .mo { color: #666 } /* Literal.Number.Oct */
+.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
+.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
+.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
+.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
+.codehilite .se { color: #AA5D1F; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.codehilite .si { color: #A45A77; font-weight: bold } /* Literal.String.Interpol */
+.codehilite .sx { color: #008000 } /* Literal.String.Other */
+.codehilite .sr { color: #A45A77 } /* Literal.String.Regex */
+.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
+.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
+.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #00F } /* Name.Function.Magic */
+.codehilite .vc { color: #19177C } /* Name.Variable.Class */
+.codehilite .vg { color: #19177C } /* Name.Variable.Global */
+.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
+.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
+.codehilite .il { color: #666 } /* Literal.Number.Integer.Long */
+.codehilite { background: var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; }</style></head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="kicker">Groupe CAT VIP — Integration Knowledge Hub</div>
+    <h1>Interface Documentation Standard — for Andsoft</h1>
+    <div class="meta">The documentation rules we now check automatically against every interface document you send</div>
+  </div>
+  <div class="toc"><strong>Contents</strong><div class="toc">
+<ul>
+<li><a href="#interface-documentation-standard-for-andsoft">Interface Documentation Standard — for Andsoft</a><ul>
+<li><a href="#1-every-field-needs-either-a-source-mapping-or-a-stated-fixed-value">1. Every field needs either a source mapping or a stated fixed value</a></li>
+<li><a href="#2-if-you-state-a-fixed-value-make-it-match-the-source-column">2. If you state a fixed value, make it match the source column</a></li>
+<li><a href="#3-naming-json-field-names-should-be-camelcase">3. Naming: JSON field names should be camelCase</a></li>
+<li><a href="#4-if-an-attribute-name-repeats-with-different-meanings-consider-naming-it-explicitly-instead">4. If an attribute name repeats with different meanings, consider naming it explicitly instead</a></li>
+<li><a href="#5-describe-a-repeatable-array-shape-once-not-once-per-example">5. Describe a repeatable array shape once, not once per example</a></li>
+<li><a href="#6-every-field-needs-a-real-description">6. Every field needs a real description</a></li>
+<li><a href="#7-finalize-the-endpoint-url-before-cutover">7. Finalize the endpoint URL before cutover</a></li>
+<li><a href="#8-make-sure-the-type-column-object-vs-array-agrees-with-your-own-worked-example">8. Make sure the Type column (object vs. array) agrees with your own worked example</a></li>
+<li><a href="#9-double-check-the-endpoint-url-has-no-stray-characters">9. Double-check the endpoint URL has no stray characters</a></li>
+<li><a href="#10-keep-the-rank-column-numerically-consistent">10. Keep the Rank column numerically consistent</a></li>
+<li><a href="#11-pick-one-authentication-mechanism-not-several-marked-to-be-confirmed">11. Pick one authentication mechanism, not several marked "to be confirmed"</a></li>
+<li><a href="#12-state-your-datetime-format-and-timezone-convention-at-least-once">12. State your date/time format and timezone convention at least once</a></li>
+<li><a href="#13-state-the-unit-of-measure-for-any-numeric-field-representing-a-physical-quantity">13. State the unit of measure for any numeric field representing a physical quantity</a></li>
+<li><a href="#14-note-directly-against-a-field-when-a-business-rule-makes-it-only-conditionally-required">14. Note directly against a field when a business rule makes it only conditionally required</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+  <h1 id="interface-documentation-standard-for-andsoft">Interface Documentation Standard — for Andsoft</h1>
+<p>This is what we need from each interface's Technical Analysis document so it can be built into the Integration Knowledge Hub without back-and-forth. It's derived directly from automated checks we now run against every document you send (not just read by eye), so the same rules apply consistently across all interfaces — and findings against this standard can be handed back to you per-document rather than discovered late, one email at a time.</p>
+<h2 id="1-every-field-needs-either-a-source-mapping-or-a-stated-fixed-value">1. Every field needs either a source mapping or a stated fixed value</h2>
+<p>Every row in the field-mapping table must have one of:</p>
+<ul>
+<li>a value in the "Field AndSoft" column (your own source attribute/column name), or</li>
+<li>an explicit "Fixed value: X" note in the Description, when the field is a constant rather than something that varies per record.</li>
+</ul>
+<p>A blank or "?" in both places means we cannot build against that field — it becomes a blocking question back to you before development starts. In CV07_01, 16 fields currently fall into this category (full list in that interface's own review).</p>
+<h2 id="2-if-you-state-a-fixed-value-make-it-match-the-source-column">2. If you state a fixed value, make it match the source column</h2>
+<p>Where a Description says "Fixed value: X", the Field AndSoft column should show the same X — not a different value, and not a conditional expression that contradicts the stated constant. If the real rule is conditional (e.g. "only when a given field equals a certain code"), say so in the Description rather than in the source column alone, so both agree.</p>
+<h2 id="3-naming-json-field-names-should-be-camelcase">3. Naming: JSON field names should be camelCase</h2>
+<p>Per your own Section 2.2 convention, field names are camelCase (<code>createdAt</code>, <code>userId</code>). Please keep this consistent — acronyms used as a whole name (EAN, VIN, CMR, GPS) are fine as-is.</p>
+<h2 id="4-if-an-attribute-name-repeats-with-different-meanings-consider-naming-it-explicitly-instead">4. If an attribute name repeats with different meanings, consider naming it explicitly instead</h2>
+<p>Some fields in CV07_01 reuse one generic column name for several unrelated purposes — for example <code>tags.label</code> carries a traffic code in one row, a carrier's SAP code in another, and a flag about trip disruption in a third, with nothing in the data itself to tell them apart. Where this is intentional and necessary, that's fine — just make sure the Description for each occurrence is specific enough that a reader can tell them apart (as was the case here). Where it isn't necessary, a named field per purpose is easier for us to build and validate against.</p>
+<h2 id="5-describe-a-repeatable-array-shape-once-not-once-per-example">5. Describe a repeatable array shape once, not once per example</h2>
+<p>Several fields in CV07_01 (<code>attributes.name</code>/<code>value</code>, <code>tags.label</code>, <code>references.reference</code>/<code>qualifier</code>) are genuinely repeatable — the same <code>{name, value}</code> or <code>{label, permission, active}</code> shape appears several times per payload, with different concrete values each time (e.g. <code>carrier_code</code>, <code>origin_location_code</code>, <code>destination_location_code</code>, <code>client</code>). Documenting this with one row per example (as CV07_01 does) works and nothing was lost on our side, but it's easier for everyone if the table describes the shape once and lists known values in a short table or bullet list underneath, rather than repeating the full row per example — especially as the number of known values grows.</p>
+<h2 id="6-every-field-needs-a-real-description">6. Every field needs a real description</h2>
+<p>A blank or placeholder description means we have to come back and ask what the field actually means. A short, specific sentence is enough.</p>
+<h2 id="7-finalize-the-endpoint-url-before-cutover">7. Finalize the endpoint URL before cutover</h2>
+<p>A "TBD" placeholder in the endpoint URL is fine for an early draft but needs to become a real, confirmed value before go-live — we'll flag it as an open item on every document until it's filled in.</p>
+<h2 id="8-make-sure-the-type-column-object-vs-array-agrees-with-your-own-worked-example">8. Make sure the Type column (object vs. array) agrees with your own worked example</h2>
+<p>In CV07_01, the field-mapping table's Type column disagreed with the document's own JSON example for 9 of 25 nested fields — <code>consignor</code>/<code>customer</code>/<code>carrier</code>/<code>consignmentNote</code>/<code>documentProperties</code> are typed "array" in the table but shown as plain objects in the example, and <code>attributes</code>/<code>tags</code>/<code>items</code>/<code>handlingUnits</code> are typed "object" but shown as arrays. We treat the worked example as ground truth and corrected for this automatically, but it's exactly the kind of mismatch that would silently produce a broken integration if someone built against the table alone without checking the example.</p>
+<h2 id="9-double-check-the-endpoint-url-has-no-stray-characters">9. Double-check the endpoint URL has no stray characters</h2>
+<p>CV07_01's endpoint URL currently contains a literal space (<code>.../api/v1/ tms-2-ship-orders/{orderId}</code>). A small thing, but it will break any client or server code generated directly from the document.</p>
+<h2 id="10-keep-the-rank-column-numerically-consistent">10. Keep the Rank column numerically consistent</h2>
+<p>The Rank column (0 = top-level object, 1/2/3/4 = nested depth) is how we reconstruct the full nested shape of the payload automatically. Please don't skip levels (e.g. jumping from Rank 1 straight to Rank 3) — if a new nesting level is needed, it should get its own Rank value one deeper than its parent.</p>
+<h2 id="11-pick-one-authentication-mechanism-not-several-marked-to-be-confirmed">11. Pick one authentication mechanism, not several marked "to be confirmed"</h2>
+<p>CV07_01's headers table lists <code>Authorization</code> twice — once marked flatly "Required," once marked "Optional / To be confirmed" — alongside a third candidate, <code>X-API-Key</code>, also "Optional / To be confirmed." That's a direct contradiction, not just an open question: we can't build a client or server against a document that simultaneously requires and doesn't require the same header. Please settle on one definitive authentication method before the headers table is considered final.</p>
+<h2 id="12-state-your-datetime-format-and-timezone-convention-at-least-once">12. State your date/time format and timezone convention at least once</h2>
+<p>CV07_01 states its format ("ISO 8601 UTC, <code>YYYY-MM-DDThh:mm:ssZ</code>") only in a separate validation-rules table, not against each individual date/time field — which is fine, as long as it's stated somewhere. A document with date/time fields but no format or timezone convention stated anywhere leaves that detail to guesswork.</p>
+<h2 id="13-state-the-unit-of-measure-for-any-numeric-field-representing-a-physical-quantity">13. State the unit of measure for any numeric field representing a physical quantity</h2>
+<p><code>grossWeight</code> (CV07_01) is described only as "Weight of the car" — the unit (kg) is inferable solely from the AndSoft source-column name <code>TMQTUNIT_KG</code>, not from anything a reader of the description itself can check. Any weight, volume, length, or similar numeric field should name its unit directly in the description.</p>
+<h2 id="14-note-directly-against-a-field-when-a-business-rule-makes-it-only-conditionally-required">14. Note directly against a field when a business rule makes it only conditionally required</h2>
+<p>BR-01 names nine specific fields that are "mandatory before the first PLN can be sent" — a genuinely conditional requirement, not a blanket one. When a business rule changes a field's cardinality like this, say so against the field's own row (not only in the separate business-rules table), so it isn't mistaken for a plain mandatory or optional field.</p>
+<hr />
+<p><em>This standard is generated from, and kept in sync with, the same automated checks (<code>scripts/lint_source_document.py</code>) run against every interface document on our side — so if the checks change, this document will be updated to match.</em></p>
+  <footer>Generated from <code>VENDOR_DOCUMENTATION_STANDARD.md</code> for the Groupe CAT VIP — Integration Knowledge Hub build.</footer>
+</div>
+</body>
+</html>

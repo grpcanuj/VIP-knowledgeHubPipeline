@@ -1,0 +1,620 @@
+openapi: 3.0.3
+info:
+  title: CV07_01_TMS_SHIP_ORDERS
+  version: V1.0
+  description: 'The purpose of this integration is to transmit the transport orders planned from TMS to
+    Shippeo, so that each vehicle movement can be tracked (RTTV/GPS), instructed to the driver through
+    the Shippeo mobile application AndSoft connects to the Shippeo Orders-in webservice to send transport
+    orders (PLN) and their cancellations/amendments (APLN) to Shippeo. The payload format is JSON.
+
+
+    (Generated from a vendor Word-template document via the Knowledge Hub pipeline - see spec_type/spec_version
+    in interfaces.yaml. Not yet a vendor-supplied OpenAPI spec.)'
+servers:
+- url: https://TBD/api/v1
+  description: Production - endpoint not yet finalized by the vendor
+- url: https://TBD-test/api/v1
+  description: Test / UAT - endpoint not yet finalized by the vendor
+tags:
+- name: AndSoft TMS
+  description: Operations for CV07_01_TMS_SHIP_ORDERS
+paths:
+  /api/v1/ tms-2-ship-orders/{orderId}:
+    post:
+      tags:
+      - AndSoft TMS
+      summary: CV07_01_TMS_SHIP_ORDERS
+      description: The purpose of this integration is to transmit the transport orders planned from TMS
+        to Shippeo, so that each vehicle movement can be tracked (RTTV/GPS), instructed to the driver
+        through the Shippeo mobile application AndSoft connects to the Shippeo Orders-in webservice to
+        send transport orders (PLN) and their cancellations/amendments (APLN) to Shippeo. The payload
+        format is JSON.
+      operationId: cV0701
+      responses:
+        '202':
+          description: The order request (PLN or APLN) is valid and has been accepted/queued for processing
+            by Shippeo.
+        '520':
+          description: A server-side error occurred on Shippeo's side. The same call must be resent, up
+            to 5 retries.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CV07_01Request'
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        description: 'Path parameter: orderId'
+        schema:
+          type: string
+components:
+  schemas:
+    CV07_01Request:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            senderId:
+              type: string
+              maxLength: 35
+              description: 'Fixed value: CAT2020'
+              example: CAT2020
+            duplicateReceiverId:
+              type: string
+              maxLength: 35
+              description: 'Fixed value: shippeo'
+              example: shippeo
+            messageType:
+              type: string
+              maxLength: 6
+              description: 'Fixed value: GTF511'
+              example: GTF511
+            messageDate:
+              type: string
+              format: date-time
+              description: Date of the message
+            messageFunction:
+              type: string
+              maxLength: 1
+              description: 'Fixed value: 0'
+              example: '0'
+            messageReference:
+              type: string
+              maxLength: 35
+              description: Unique reference of the message (counter)
+          required:
+          - duplicateReceiverId
+          - messageDate
+          - messageFunction
+          - messageReference
+          - messageType
+          - senderId
+        shipment:
+          type: object
+          properties:
+            technicalReference:
+              type: string
+              maxLength: 35
+              description: Concatenation of the chassis number and the lot number
+            reference:
+              type: string
+              maxLength: 35
+              description: Null for CAT load, else it is the supplier load reference
+            transportMode:
+              type: string
+              maxLength: 35
+              description: Mode of transport (road)
+            transportServiceBuyer:
+              type: array
+              items:
+                type: object
+                properties:
+                  identifier:
+                    type: string
+                    maxLength: 35
+                    description: CATLEO, CATADVANTAGE...
+                  qualifier:
+                    type: string
+                    maxLength: 3
+                    description: 'Fixed value: ZZ'
+                    example: ZZ
+                required:
+                - identifier
+                - qualifier
+            carrier:
+              type: array
+              items:
+                type: object
+                properties:
+                  identifier:
+                    type: string
+                    maxLength: 35
+                    description: SAP code of the carrier
+                  qualifier:
+                    type: string
+                    maxLength: 3
+                    description: 'Fixed value: ZZ'
+                    example: ZZ
+                required:
+                - identifier
+                - qualifier
+            transportMean:
+              type: array
+              items:
+                type: object
+                properties:
+                  qualifier:
+                    type: string
+                    maxLength: 8
+                    description: Type of mean (truck)
+                  identifier:
+                    type: string
+                    maxLength: 35
+                    description: Plate number of the truck
+                  text:
+                    type: string
+                    maxLength: 70
+                    description: Plate number of the truck
+                  isTrackable:
+                    type: boolean
+                    description: 'Fixed value: true'
+                    example: 'true'
+                required:
+                - identifier
+                - isTrackable
+                - qualifier
+                - text
+            orders:
+              type: array
+              items:
+                type: object
+                properties:
+                  consignmentNote:
+                    type: object
+                    properties:
+                      consignor:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            maxLength: 35
+                            description: Name of the consignor (CAT FRANCE SAS)
+                          address:
+                            type: string
+                            maxLength: 35
+                            description: Address of the consignor (5-7 rue Frédéric Clavel)
+                          city:
+                            type: string
+                            maxLength: 35
+                            description: City of the consignor (SURESNES)
+                          zip:
+                            type: string
+                            maxLength: 35
+                            description: Zip of the consignor (92150)
+                          country:
+                            type: string
+                            maxLength: 35
+                            description: Country of the consignor (FR)
+                          taxReference:
+                            type: string
+                            maxLength: 35
+                            description: Tax reference of the consignor (FR67572158269)
+                        required:
+                        - address
+                        - city
+                        - country
+                        - name
+                        - taxReference
+                        - zip
+                      customer:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            maxLength: 35
+                            description: Name of the consignee
+                          address:
+                            type: string
+                            maxLength: 35
+                            description: Address of the consignee
+                          city:
+                            type: string
+                            maxLength: 35
+                            description: City of the consignee
+                          zip:
+                            type: string
+                            maxLength: 35
+                            description: Zip of the consignee
+                          country:
+                            type: string
+                            maxLength: 35
+                            description: Country of the consignee
+                          taxReference:
+                            type: string
+                            maxLength: 35
+                            description: Tax reference of the consignee
+                        required:
+                        - address
+                        - city
+                        - country
+                        - name
+                        - taxReference
+                        - zip
+                      carrier:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            maxLength: 35
+                            description: Name of the carrier
+                          address:
+                            type: string
+                            maxLength: 35
+                            description: Address of the carrier
+                          city:
+                            type: string
+                            maxLength: 35
+                            description: City of the carrier
+                          zip:
+                            type: string
+                            maxLength: 35
+                            description: Zip of the carrier
+                          country:
+                            type: string
+                            maxLength: 35
+                            description: Country of the carrier
+                          taxReference:
+                            type: string
+                            maxLength: 35
+                            description: Tax reference of the carrier
+                        required:
+                        - address
+                        - city
+                        - country
+                        - name
+                        - taxReference
+                        - zip
+                      customAttributes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              maxLength: 35
+                              description: '(Only for Portugal) Fixed value: CodeATPortugal'
+                              example: CodeATPortugal
+                            value:
+                              type: string
+                              maxLength: 35
+                              description: (Only for Portugal) ATCUD of the load
+                          required:
+                          - name
+                          - value
+                      documentProperties:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            maxLength: 35
+                            description: Type of properties (national_consignment_note)
+                          additionalConditions:
+                            type: string
+                            maxLength: 35
+                            description: Legal conditions of the transport
+                        required:
+                        - additionalConditions
+                        - type
+                  goodsDescription:
+                    type: string
+                    maxLength: 70
+                    description: 'Fixed value: Cars'
+                    example: Cars
+                  references:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                          maxLength: 35
+                          description: 'Reused for 3 distinct purposes across the array slots this field
+                            appears in: Concatenation of the chassis number and the lot number | Load
+                            number with Renault format | Load number'
+                        qualifier:
+                          type: string
+                          enum:
+                          - DQ
+                          - MA
+                          - ADL
+                          maxLength: 3
+                          description: 'Reused for 3 distinct purposes across the array slots this field
+                            appears in: Fixed value: DQ | Fixed value: MA | Fixed value: ADL'
+                          example: DQ
+                      required:
+                      - qualifier
+                      - reference
+                  pickUp:
+                    type: object
+                    properties:
+                      identifications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            identifier:
+                              type: string
+                              maxLength: 35
+                              description: Code of the pickup point
+                            qualifier:
+                              type: string
+                              maxLength: 3
+                              description: 'Fixed value: ZZ'
+                              example: ZZ
+                          required:
+                          - identifier
+                          - qualifier
+                      name:
+                        type: string
+                        maxLength: 35
+                        description: Name of the pickup point
+                      address1:
+                        type: string
+                        maxLength: 35
+                        description: Address1 of the pickup point
+                      address2:
+                        type: string
+                        maxLength: 35
+                        description: Address2 of the pickup point
+                      country:
+                        type: string
+                        maxLength: 2
+                        description: Country of the pickup point
+                      postalCode:
+                        type: string
+                        maxLength: 10
+                        description: Postal code of the pickup point
+                      city:
+                        type: string
+                        maxLength: 35
+                        description: City of the pickup point
+                      latitude:
+                        type: number
+                        format: float
+                        description: Latitude of the pickup point
+                      longitude:
+                        type: number
+                        format: float
+                        description: Longitude of the pickup point
+                      instructions:
+                        type: string
+                        maxLength: 512
+                        description: Instruction at pickup (information on the vehicle)
+                      dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            qualifier:
+                              type: string
+                              maxLength: 3
+                              description: 'Fixed value: 398'
+                              example: '398'
+                            dateTime:
+                              type: string
+                              format: date-time
+                              description: Planned date for pickup
+                          required:
+                          - dateTime
+                          - qualifier
+                    required:
+                    - address1
+                    - address2
+                    - city
+                    - country
+                    - instructions
+                    - latitude
+                    - longitude
+                    - name
+                    - postalCode
+                  consignee:
+                    type: object
+                    properties:
+                      identifications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            identifier:
+                              type: string
+                              maxLength: 35
+                              description: Code of the delivery point
+                            qualifier:
+                              type: string
+                              maxLength: 3
+                              description: 'Fixed value: ZZ'
+                              example: ZZ
+                          required:
+                          - identifier
+                          - qualifier
+                      name:
+                        type: string
+                        maxLength: 35
+                        description: Name of the delivery point
+                      address1:
+                        type: string
+                        maxLength: 35
+                        description: Address1 of the delivery point
+                      address2:
+                        type: string
+                        maxLength: 35
+                        description: Address2 of the delivery point
+                      country:
+                        type: string
+                        maxLength: 2
+                        description: Country of the delivery point
+                      postalCode:
+                        type: string
+                        maxLength: 10
+                        description: Postal code of the delivery point
+                      city:
+                        type: string
+                        maxLength: 35
+                        description: City of the delivery point
+                      latitude:
+                        type: number
+                        format: float
+                        description: Latitude of the delivery point
+                      longitude:
+                        type: number
+                        format: float
+                        description: Longitude of the delivery point
+                      instructions:
+                        type: string
+                        maxLength: 512
+                        description: Instruction at delivery (information on the vehicle)
+                      dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            qualifier:
+                              type: string
+                              maxLength: 3
+                              description: 'Fixed value: 2'
+                              example: '2'
+                            dateTime:
+                              type: string
+                              format: date-time
+                              description: Planned date for delivery
+                          required:
+                          - dateTime
+                          - qualifier
+                    required:
+                    - address1
+                    - address2
+                    - city
+                    - country
+                    - instructions
+                    - latitude
+                    - longitude
+                    - name
+                    - postalCode
+                  clientIdentification:
+                    type: object
+                    properties:
+                      agency:
+                        type: string
+                        maxLength: 35
+                        description: Agency code in charge of the transport
+                    required:
+                    - agency
+                  attributes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          enum:
+                          - carrier_code
+                          - origin_location_code
+                          - destination_location_code
+                          - client
+                          maxLength: 35
+                          description: 'Reused for 4 distinct purposes across the array slots this field
+                            appears in: Fixed value: carrier_code | Fixed value: origin_location_code
+                            | Fixed value: destination_location_code | Fixed value: client'
+                          example: carrier_code
+                        value:
+                          type: string
+                          maxLength: 35
+                          description: 'Reused for 4 distinct purposes across the array slots this field
+                            appears in: SAP code of the carrier | Customer code of the pickup point |
+                            Customer code of the delivery point | Traffic code'
+                      required:
+                      - name
+                      - value
+                  quantity:
+                    type: object
+                    properties:
+                      grossWeight:
+                        type: number
+                        format: float
+                        description: Weight of the car
+                    required:
+                    - grossWeight
+                  tags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label:
+                          type: string
+                          maxLength: 35
+                          description: 'Reused for 4 distinct purposes across the array slots this field
+                            appears in: Traffic code | SAP code of the carrier | RTTV system of the customer
+                            | Information that the trip is in rupture'
+                        permission:
+                          type: string
+                          maxLength: 35
+                          description: 'Fixed value: publicReadOnly'
+                          example: publicReadOnly
+                        active:
+                          type: string
+                          maxLength: 35
+                          description: 'Fixed value: true'
+                          example: 'true'
+                      required:
+                      - active
+                      - label
+                      - permission
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                          maxLength: 35
+                          description: VIN number of the vehicle
+                        EAN:
+                          type: string
+                          maxLength: 35
+                          description: Chassis number of the vehicle
+                        description:
+                          type: string
+                          maxLength: 35
+                          description: 'Fixed value: VIN and VIS'
+                          example: VIN and VIS
+                      required:
+                      - EAN
+                      - description
+                      - reference
+                  handlingUnits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        trackingCode:
+                          type: string
+                          maxLength: 35
+                          description: VIN number of the vehicle, or empty for empty load
+                        customPackagingQualifier:
+                          type: string
+                          maxLength: 35
+                          description: 'Fixed value: VIN'
+                          example: VIN
+                      required:
+                      - customPackagingQualifier
+                      - trackingCode
+                required:
+                - goodsDescription
+          required:
+          - reference
+          - technicalReference
+          - transportMode

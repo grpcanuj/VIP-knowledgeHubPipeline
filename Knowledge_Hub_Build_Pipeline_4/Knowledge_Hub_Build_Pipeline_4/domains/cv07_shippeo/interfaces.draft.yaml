@@ -1,0 +1,517 @@
+# AUTO-GENERATED DRAFT from CV07_01_TMS_SHIP_ORDERS.docx - review before promoting.
+
+interfaces:
+- id: CV07_01
+  name: CV07_01_TMS_SHIP_ORDERS
+  description: The purpose of this integration is to transmit the transport orders planned from TMS to
+    Shippeo, so that each vehicle movement can be tracked (RTTV/GPS), instructed to the driver through
+    the Shippeo mobile application AndSoft connects to the Shippeo Orders-in webservice to send transport
+    orders (PLN) and their cancellations/amendments (APLN) to Shippeo. The payload format is JSON.
+  source_system: AndSoft TMS
+  target_system: Shippeo
+  protocol: REST
+  method: POST
+  endpoint_url: https://TBD/api/v1/ tms-2-ship-orders/{orderId}
+  frequency: Async, on transport order event
+  owner: AndSoft
+  spec_type: vendor-template
+  spec_version: V1.0
+  status: documented
+  idempotent: false
+  retry_policy: No — each accepted call creates or updates the transport order tracked in Shippeo. On
+    a 520 response, the same call (identical payload) is resent, up to 5 times.
+  response_contract: status-code only, no structured body (see endpoint table)
+  response_status_codes:
+  - code: '202'
+    meaning: Accepted
+    description: The order request (PLN or APLN) is valid and has been accepted/queued for processing
+      by Shippeo.
+  - code: '520'
+    meaning: Server error (Shippeo-specific)
+    description: A server-side error occurred on Shippeo's side. The same call must be resent, up to 5
+      retries.
+  required_headers:
+  - header: Content-Type
+    value: application/json
+    notes: Required
+    required: true
+  - header: Accept
+    value: application/json
+    notes: Required
+    required: true
+  - header: Authorization
+    value: Bearer [access_token]
+    notes: Required. Token obtained from the prior Shippeo token request call (UAT / Production credentials).
+    required: true
+  - header: X-Request-ID
+    value: '[uuid-v4]'
+    notes: Optional — useful for tracing/troubleshooting
+    required: false
+  - header: Authorization
+    value: Bearer [access_token]
+    notes: Optional / To be confirmed. Required only if authentication is managed through a bearer token.
+    required: false
+  - header: X-API-Key
+    value: '[api-key]'
+    notes: Optional / To be confirmed. Required only if authentication is managed through an API key.
+    required: false
+  - header: '[X-Custom]'
+    value: '[value]'
+    notes: Optional. Any additional technical header injected by the authentication or integration layer.
+    required: false
+  field_validation_rules:
+  - field: estimatedDepartureDate (ETD)
+    rule: Must not be earlier than today's date
+    error_code: VALIDATION_ERROR
+    message: If ETD < date of today, the PLN is blocked (rule currently enforced in EDI).
+  - field: Actual Trp, Truck plate, Driver, ETD, ETA, Pickup point, Delivery point, veh ID, Shippeo order
+      suffix, lib_lot_fourn
+    rule: Mandatory before the first PLN can be sent
+    error_code: VALIDATION_ERROR
+    message: The PLN is only sent once all of these fields are filled in (business rule 1).
+  - field: All *Date / dateTime fields
+    rule: ISO 8601 UTC format “YYYY-MM-DDThh:mm:ssZ”
+    error_code: VALIDATION_ERROR
+    message: messageDate, pickUp.dates[].dateTime, consignee.dates[].dateTime, etc.
+  business_rules:
+  - id: BR-01
+    rule: 'A PLN is sent once all of the following are filled in: Actual Trp, Truck plate, ETD, ETA, Pickup
+      point, Delivery point, veh ID, Shippeo order suffix, lib_lot_fourn. Driver is optional, but it must
+      be present for AndSoft/2020 because it determines the truck plate.'
+    notes: For AndSoft planned load/order, these data should come from AndSoft only. If ETD < today, the
+      PLN is blocked.
+  - id: BR-02
+    rule: If one of ETD, ETA, Pickup point or Delivery point is modified after the first sending, a new
+      PLN is triggered (without any APLN).
+    notes: For AndSoft planned load/order, these data/changes should come from AndSoft only. If ETD <
+      today, the PLN is blocked.
+  - id: BR-03
+    rule: If one of Actual Trp, Truck plate, ETD, ETA, veh ID, Pickup point, Delivery point, Shippeo order
+      suffix or lib_lot_fourn goes from filled in to blank, an APLN is triggered.
+    notes: For AndSoft planned load/order, these data/changes should come from AndSoft only.
+  - id: BR-04
+    rule: If one of Actual Trp, Truck plate, veh ID, Shippeo order suffix or lib_lot_fourn is modified
+      (i.e. changes from one non-null value to another non-null value), both an APLN and a new PLN are
+      triggered.
+    notes: For AndSoft planned load/order, these data/changes should come from AndSoft only. If ETD <
+      today, the PLN is blocked.
+  - id: BR-05
+    rule: 'One JSON call corresponds to one lot: vehicles are grouped by lot number.'
+    notes: ''
+  - id: BR-06
+    rule: As soon as the transport is completed in the TMS (namely the delivery is confirmed), no further
+      PLN is to be sent.
+    notes: ''
+  fields:
+  - field_id: meta-senderid
+    required: true
+    io: request
+    path: meta.senderId
+    fixed_value: CAT2020
+    source_field: CAT2020
+  - field_id: meta-duplicatereceiverid
+    required: true
+    io: request
+    path: meta.duplicateReceiverId
+    fixed_value: shippeo
+    source_field: shippeo
+  - field_id: meta-messagetype
+    required: true
+    io: request
+    path: meta.messageType
+    fixed_value: GTF511
+    source_field: GTF511
+  - field_id: meta-messagedate
+    required: true
+    io: request
+    path: meta.messageDate
+    source_field: yyyyMMddHHmmssSSS
+  - field_id: meta-messagefunction
+    required: true
+    io: request
+    path: meta.messageFunction
+    fixed_value: '0'
+    source_field: '0'
+  - field_id: meta-messagereference
+    required: true
+    io: request
+    path: meta.messageReference
+    source_field: TORDID + yyyyMMddHHmmssSSS ?
+  - field_id: shipment-technicalreference
+    required: true
+    io: request
+    path: shipment.technicalReference
+    source_field: 'AndSoft Trip ID
+
+      TRIPID'
+  - field_id: shipment-reference
+    required: true
+    io: request
+    path: shipment.reference
+    source_field: TRIPNUMBER
+  - field_id: shipment-transportmode
+    required: true
+    io: request
+    path: shipment.transportMode
+    source_field: TORDTRSMODE
+  - field_id: transportservicebuyer-identifier
+    required: true
+    io: request
+    path: shipment.transportServiceBuyer[].identifier
+  - field_id: transportservicebuyer-qualifier
+    required: true
+    io: request
+    path: shipment.transportServiceBuyer[].qualifier
+    fixed_value: ZZ
+    source_field: ZZ
+  - field_id: carrier-identifier
+    required: true
+    io: request
+    path: shipment.carrier[].identifier
+    source_field: TORDCARRIERCODE
+  - field_id: carrier-qualifier
+    required: true
+    io: request
+    path: shipment.carrier[].qualifier
+    fixed_value: ZZ
+    source_field: ZZ
+  - field_id: transportmean-qualifier
+    required: true
+    io: request
+    path: shipment.transportMean[].qualifier
+    source_field: VEHVEHTCODE ?
+  - field_id: transportmean-identifier
+    required: true
+    io: request
+    path: shipment.transportMean[].identifier
+    source_field: VEHCODE
+  - field_id: transportmean-text
+    required: true
+    io: request
+    path: shipment.transportMean[].text
+    source_field: VEHCODE ?
+  - field_id: transportmean-istrackable
+    required: true
+    io: request
+    path: shipment.transportMean[].isTrackable
+    fixed_value: 'true'
+  - field_id: consignor-name
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.name
+    source_field: CAT FRANCE SAS
+  - field_id: consignor-address
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.address
+    source_field: 5-7 rue Frédéric Clavel
+  - field_id: consignor-city
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.city
+    source_field: SURESNES
+  - field_id: consignor-zip
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.zip
+    source_field: '92150'
+  - field_id: consignor-country
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.country
+    source_field: FR
+  - field_id: consignor-taxreference
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.consignor.taxReference
+    source_field: FR67572158269
+  - field_id: customer-name
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.name
+    source_field: TMADTHIRDPARTYNAME
+  - field_id: customer-address
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.address
+    source_field: TMADADDRESS1
+  - field_id: customer-city
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.city
+    source_field: TMADLOCNAME
+  - field_id: customer-zip
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.zip
+    source_field: TMADLOCZIPCODE
+  - field_id: customer-country
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.country
+    source_field: TMADCTRYCODE
+  - field_id: customer-taxreference
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customer.taxReference
+    source_field: TPRTVATNUMBER
+  - field_id: carrier-name
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.name
+    source_field: RESSSUBCOTPRTCODE
+  - field_id: carrier-address
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.address
+    source_field: TPADADDRESS1
+  - field_id: carrier-city
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.city
+    source_field: TPADLOCNAME
+  - field_id: carrier-zip
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.zip
+    source_field: TPADLOCZIPCODE
+  - field_id: carrier-country
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.country
+    source_field: TPADCTRYCODE
+  - field_id: carrier-taxreference
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.carrier.taxReference
+    source_field: TPRTVATNUMBER
+  - field_id: customattributes-name
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customAttributes[].name
+    fixed_value: CodeATPortugal
+    source_field: If TMADCTRYCODE = ‘PT’
+  - field_id: customattributes-value
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.customAttributes[].value
+    source_field: If TMADCTRYCODE = ‘PT’
+  - field_id: documentproperties-type
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.documentProperties.type
+    source_field: TORDCMR ?
+  - field_id: documentproperties-additionalconditions
+    required: true
+    io: request
+    path: shipment.orders[].consignmentNote.documentProperties.additionalConditions
+  - field_id: orders-goodsdescription
+    required: true
+    io: request
+    path: shipment.orders[].goodsDescription
+    fixed_value: Cars
+    source_field: Cars
+  - field_id: references-reference
+    required: true
+    io: request
+    path: shipment.orders[].references[].reference
+    source_field: VEHVIN + (LOT ?)
+  - field_id: references-qualifier
+    required: true
+    io: request
+    path: shipment.orders[].references[].qualifier
+    fixed_value: DQ
+    source_field: DQ
+  - field_id: pickup-identifications-identifier
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.identifications[].identifier
+    source_field: TMADTPRTCODE
+  - field_id: pickup-identifications-qualifier
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.identifications[].qualifier
+    fixed_value: ZZ
+    source_field: ZZ
+  - field_id: pickup-name
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.name
+    source_field: TMADTHIRDPARTYNAME
+  - field_id: pickup-address1
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.address1
+    source_field: TMADADDRESS1
+  - field_id: pickup-address2
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.address2
+    source_field: TMADADDRESS2
+  - field_id: pickup-country
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.country
+    source_field: TMADCTRYCODE
+  - field_id: pickup-postalcode
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.postalCode
+    source_field: TMADLOCZIPCODE
+  - field_id: pickup-city
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.city
+    source_field: TMADLOCNAME
+  - field_id: pickup-latitude
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.latitude
+    source_field: TMADLAT
+  - field_id: pickup-longitude
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.longitude
+    source_field: TMADLONG
+  - field_id: pickup-instructions
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.instructions
+    source_field: TMISMEMO ?
+  - field_id: pickup-dates-qualifier
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.dates[].qualifier
+    fixed_value: '398'
+    source_field: '398'
+  - field_id: pickup-dates-datetime
+    required: true
+    io: request
+    path: shipment.orders[].pickUp.dates[].dateTime
+    source_field: TMSPLANNEDSTARTDATE
+  - field_id: consignee-identifications-identifier
+    required: true
+    io: request
+    path: shipment.orders[].consignee.identifications[].identifier
+    source_field: TMADTPRTCODE
+  - field_id: consignee-identifications-qualifier
+    required: true
+    io: request
+    path: shipment.orders[].consignee.identifications[].qualifier
+    fixed_value: ZZ
+    source_field: ZZ
+  - field_id: consignee-name
+    required: true
+    io: request
+    path: shipment.orders[].consignee.name
+    source_field: TMADTHIRDPARTYNAME
+  - field_id: consignee-address1
+    required: true
+    io: request
+    path: shipment.orders[].consignee.address1
+    source_field: TMADADDRESS1
+  - field_id: consignee-address2
+    required: true
+    io: request
+    path: shipment.orders[].consignee.address2
+    source_field: TMADADDRESS2
+  - field_id: consignee-country
+    required: true
+    io: request
+    path: shipment.orders[].consignee.country
+    source_field: TMADCTRYCODE
+  - field_id: consignee-postalcode
+    required: true
+    io: request
+    path: shipment.orders[].consignee.postalCode
+    source_field: TMADLOCZIPCODE
+  - field_id: consignee-city
+    required: true
+    io: request
+    path: shipment.orders[].consignee.city
+    source_field: TMADLOCNAME
+  - field_id: consignee-latitude
+    required: true
+    io: request
+    path: shipment.orders[].consignee.latitude
+    source_field: TMADLAT
+  - field_id: consignee-longitude
+    required: true
+    io: request
+    path: shipment.orders[].consignee.longitude
+    source_field: TMADLONG
+  - field_id: consignee-instructions
+    required: true
+    io: request
+    path: shipment.orders[].consignee.instructions
+    source_field: TMISMEMO ?
+  - field_id: consignee-dates-qualifier
+    required: true
+    io: request
+    path: shipment.orders[].consignee.dates[].qualifier
+    fixed_value: '2'
+    source_field: '2'
+  - field_id: consignee-dates-datetime
+    required: true
+    io: request
+    path: shipment.orders[].consignee.dates[].dateTime
+    source_field: TMISPLANNEDSTARTDATE
+  - field_id: clientidentification-agency
+    required: true
+    io: request
+    path: shipment.orders[].clientIdentification.agency
+  - field_id: attributes-name
+    required: true
+    io: request
+    path: shipment.orders[].attributes[].name
+    fixed_value: carrier_code
+    source_field: carrier_code
+  - field_id: attributes-value
+    required: true
+    io: request
+    path: shipment.orders[].attributes[].value
+  - field_id: quantity-grossweight
+    required: true
+    io: request
+    path: shipment.orders[].quantity.grossWeight
+    source_field: TMQTUNIT_KG
+  - field_id: tags-label
+    required: true
+    io: request
+    path: shipment.orders[].tags[].label
+  - field_id: tags-permission
+    required: true
+    io: request
+    path: shipment.orders[].tags[].permission
+    fixed_value: publicReadOnly
+    source_field: publicReadOnly
+  - field_id: tags-active
+    required: true
+    io: request
+    path: shipment.orders[].tags[].active
+    fixed_value: 'true'
+    source_field: 'true'
+  - field_id: items-reference
+    required: true
+    io: request
+    path: shipment.orders[].items[].reference
+  - field_id: items-ean
+    required: true
+    io: request
+    path: shipment.orders[].items[].EAN
+  - field_id: items-description
+    required: true
+    io: request
+    path: shipment.orders[].items[].description
+    fixed_value: VIN and VIS
+    source_field: VIN and VIS
+  - field_id: handlingunits-trackingcode
+    required: true
+    io: request
+    path: shipment.orders[].handlingUnits[].trackingCode
+  - field_id: handlingunits-custompackagingqualifier
+    required: true
+    io: request
+    path: shipment.orders[].handlingUnits[].customPackagingQualifier
+    fixed_value: VIN
+    source_field: VIN

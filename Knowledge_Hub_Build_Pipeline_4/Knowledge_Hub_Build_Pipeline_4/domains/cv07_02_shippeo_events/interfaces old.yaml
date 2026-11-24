@@ -1,0 +1,271 @@
+# AUTO-GENERATED DRAFT from CV07_02_TMS_2_SHIP_EVENTS.docx - review before promoting.
+
+interfaces:
+- id: CV07_02
+  name: CV07_02_TMS_2_SHIP_EVENTS
+  description: ''
+  source_system: TBD
+  target_system: TBD
+  protocol: REST
+  method: POST
+  endpoint_url: TBD
+  frequency: Async, on transport order event
+  owner: AndSoft
+  spec_type: vendor-template
+  spec_version: V1.0
+  status: documented
+  idempotent: true
+  retry_policy: ''
+  response_contract: status-code only, no structured body (see endpoint table)
+  response_status_codes:
+  - code: '202'
+    meaning: Accepted
+    description: The event request is syntactically valid and successfully queued by Shippeo for processing.
+  - code: '400'
+    meaning: Bad Request
+    description: Schema validation failure, invalid ISO date format, missing required parameters, or unrecognized
+      eventCode.
+  - code: '401'
+    meaning: Unauthorized
+    description: Invalid, expired, or missing Bearer authentication token.
+  - code: '404'
+    meaning: Not Found
+    description: Target orderId, orderReference, or technicalReference does not exist in Shippeo.
+  - code: '520'
+    meaning: Server Error (Shippeo-specific)
+    description: Transient internal failure on Shippeo side. The AndSoft TMS must automatically replay
+      the identical call up to 5 retries.
+  required_headers:
+  - header: Content-Type
+    value: application/json
+    notes: Required
+    required: true
+  - header: Accept
+    value: application/json
+    notes: Required
+    required: true
+  - header: Authorization
+    value: Bearer [access_token]
+    notes: Required. Token obtained from prior Shippeo OAuth2 token endpoint.
+    required: true
+  - header: X-Request-ID
+    value: '[uuid-v4]'
+    notes: Optional — used for end-to-end tracing and debugging across systems.
+    required: false
+  - header: X-API-Key
+    value: '[api-key]'
+    notes: Optional / To be confirmed if required by gateway infrastructure alongside Bearer.
+    required: false
+  field_validation_rules:
+  - field: eventDateTime / eventDate
+    rule: Must not be in the future (eventDateTime <= current UTC time)
+    error_code: VALIDATION_ERROR
+    message: Future event timestamps are strictly rejected by Shippeo.
+  - field: technicalReference / orderReference
+    rule: Must match an existing transport order already accepted by Shippeo (PLN)
+    error_code: ORDER_NOT_FOUND
+    message: An event cannot be attached to an unknown or unreferenced shipment.
+  - field: eventCode / eventName
+    rule: Must belong to the supported Shippeo event enum list (CON_LOAD, CON_UNLOAD...)
+    error_code: INVALID_EVENT_CODE
+    message: Unrecognized event codes are rejected with HTTP 400.
+  - field: All *DateTime / *Date fields
+    rule: Must strictly follow ISO 8601 UTC format (YYYY-MM-DDThh:mm:ssZ)
+    error_code: VALIDATION_ERROR
+    message: Formatting error triggers schema validation failure.
+  business_rules:
+  - id: BR-01
+    rule: Order Pre-requisite
+    notes: Events can only be posted for transport orders previously confirmed by a successful PLN call
+      (HTTP 202). If the order has not been transmitted or has been canceled (APLN), event generation
+      is blocked in AndSoft TMS.
+  - id: BR-02
+    rule: Milestone Sequencing
+    notes: 'Milestone sequencing should follow logical transport progression: ARRIVED_PICKUP → LOADED
+      / CON_LOAD → DEPARTED_PICKUP → ARRIVED_DELIVERY → DELIVERED / CON_UNLOAD. Out-of-order events are
+      ingested by Shippeo but trigger timeline recalibrations.'
+  - id: BR-03
+    rule: Incident & Exception Handling
+    notes: An INCIDENT or anomaly event (e.g. GOODS_LOADED_NOT_CONFORM, ORDER_NOT_LOADED_ENTIRELY_MISSING)
+      does not close a transport order; it adds an anomaly flag, triggers an ETA revision, and alerts
+      dispatchers without interrupting GPS tracking.
+  - id: BR-04
+    rule: Final Delivery & Tracking Closure
+    notes: A DELIVERED or CON_UNLOAD event on the final delivery leg automatically flags the shipment
+      as completed in Shippeo and closes active GPS tracking. POD attachments must be included if available
+      in TMS at validation time.
+  - id: BR-05
+    rule: Idempotent De-duplication
+    notes: If an event with the same eventReference or identical triplet (orderReference, eventCode, eventDateTime)
+      is resent, Shippeo treats it idempotently without duplicating milestones, preventing redundant entries
+      from network retries.
+  - id: BR-06
+    rule: WMS / External Validation Priority
+    notes: When execution milestones are recorded in CAT compound WMS (2020PF / Inform WMS) or directly
+      by dispatchers in AndSoft e-TMS, they are immediately published to Shippeo as Events-in to maintain
+      single-source tracking.
+  fields:
+  - field_id: meta-senderid
+    required: true
+    io: request
+    path: meta.senderId
+    fixed_value: CAT2020
+    source_field: CAT2020
+  - field_id: meta-duplicatereceiverid
+    required: true
+    io: request
+    path: meta.duplicateReceiverId
+    fixed_value: shippeo
+    source_field: shippeo
+  - field_id: meta-messagetype
+    required: true
+    io: request
+    path: meta.messageType
+    fixed_value: GTF514
+    source_field: GTF514
+  - field_id: meta-messagedate
+    required: true
+    io: request
+    path: meta.messageDate
+    source_field: yyyyMMddHHmmssSSS
+  - field_id: meta-messagefunction
+    required: true
+    io: request
+    path: meta.messageFunction
+    fixed_value: 9 (Original / Event message)
+    source_field: '9'
+  - field_id: meta-messagereference
+    required: true
+    io: request
+    path: meta.messageReference
+    source_field: EVT + TORDID + yyyyMMddHHmmssSSS
+  - field_id: events-eventreference
+    required: true
+    io: request
+    path: events[].eventReference
+    source_field: TEVTID
+  - field_id: events-technicalreference
+    required: true
+    io: request
+    path: events[].technicalReference
+  - field_id: events-orderreference
+    required: true
+    io: request
+    path: events[].orderReference
+    source_field: TORDEXTREFERENCE
+  - field_id: events-eventcode-eventname
+    required: true
+    io: request
+    path: events[].eventCode / eventName
+    source_field: TEVTCODE / TEVTNAME
+  - field_id: events-situationcode
+    required: true
+    io: request
+    path: events[].situationCode
+    source_field: TEVTSITCODE
+  - field_id: events-justificationcode
+    required: true
+    io: request
+    path: events[].justificationCode
+    source_field: TEVTJUSTCODE
+  - field_id: events-eventdatetime-eventdate
+    required: true
+    io: request
+    path: events[].eventDateTime / eventDate
+    source_field: TEVTEXECDATE
+  - field_id: events-eventsource-triggersource
+    required: true
+    io: request
+    path: events[].eventSource / triggerSource
+    source_field: TEVTSOURCE
+  - field_id: events-stoptype
+    required: true
+    io: request
+    path: events[].stopType
+    source_field: TSEGTYPE
+  - field_id: location-identifier-externalid
+    required: true
+    io: request
+    path: events[].location.identifier / externalId
+    source_field: TMADTPRTCODE
+  - field_id: location-qualifier
+    required: true
+    io: request
+    path: events[].location.qualifier
+    fixed_value: ZZ
+    source_field: ZZ
+  - field_id: location-name
+    required: true
+    io: request
+    path: events[].location.name
+    source_field: TMADTHIRDPARTYNAME
+  - field_id: location-city
+    required: true
+    io: request
+    path: events[].location.city
+    source_field: TMADLOCNAME
+  - field_id: location-zip-zipcode
+    required: true
+    io: request
+    path: events[].location.zip / zipCode
+    source_field: TMADLOCZIPCODE
+  - field_id: location-country
+    required: true
+    io: request
+    path: events[].location.country
+    source_field: TMADCTRYCODE
+  - field_id: location-latitude-longitude
+    required: true
+    io: request
+    path: events[].location.latitude / longitude
+    source_field: TMADLAT / TMADLONG
+  - field_id: actor-organization
+    required: true
+    io: request
+    path: events[].actor.organization
+    fixed_value: GROUPE CAT
+    source_field: GROUPE CAT
+  - field_id: actor-agency
+    required: true
+    io: request
+    path: events[].actor.agency
+    source_field: TORDAGENCY
+  - field_id: actor-userid
+    required: true
+    io: request
+    path: events[].actor.userId
+    source_field: TUSERID
+  - field_id: reason-reasoncode
+    required: true
+    io: request
+    path: events[].reason.reasonCode
+    source_field: TINCCODE
+  - field_id: reason-comment
+    required: true
+    io: request
+    path: events[].reason.comment
+    source_field: TINCMEMO
+  - field_id: items-reference
+    required: true
+    io: request
+    path: events[].items[].reference
+  - field_id: items-ean
+    required: true
+    io: request
+    path: events[].items[].ean
+    source_field: VEHCHASSIS
+  - field_id: items-itemstatus
+    required: true
+    io: request
+    path: events[].items[].itemStatus
+    source_field: VEHSTATUS
+  - field_id: documents-documenttype
+    required: true
+    io: request
+    path: events[].documents[].documentType
+    source_field: TDOCCODE
+  - field_id: documents-documenturl
+    required: true
+    io: request
+    path: events[].documents[].documentUrl
+    source_field: TDOCURL

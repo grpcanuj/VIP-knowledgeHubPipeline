@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TMS Planification Status Update",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "AndSoft TMS",
+      "description": "Operations for TMS Planification Status Update"
+    }
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "tags": [
+          "AndSoft TMS"
+        ],
+        "summary": "TMS Planification Status Update",
+        "description": "",
+        "operationId": "iF103",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IF-103Request"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IF-103Request": {
+        "type": "object",
+        "properties": {
+          "order-id": {
+            "type": "string",
+            "description": "Unique identifier for a transport order, assigned by OMS at creation."
+          },
+          "planification-status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "planned",
+              "re-planned",
+              "plan-failed"
+            ],
+            "description": "Status of the transport plan as produced by TMS's planification engine.",
+            "example": "pending"
+          },
+          "order-status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "created",
+              "planned",
+              "in-transit",
+              "delivered",
+              "cancelled"
+            ],
+            "description": "Current lifecycle state of the order as tracked across OMS and TMS.",
+            "example": "draft"
+          }
+        },
+        "required": [
+          "order-id",
+          "order-status",
+          "planification-status"
+        ]
+      }
+    }
+  }
+}

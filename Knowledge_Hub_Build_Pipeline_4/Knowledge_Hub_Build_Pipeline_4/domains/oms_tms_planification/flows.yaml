@@ -1,0 +1,71 @@
+# Domain: OMS Order / TMS Planification
+# Each step references an interface_id already defined in
+# interfaces_oms_tms_planification.yaml, or null for an internal
+# (non-interface) step. The Mermaid diagram for each flow is generated
+# from this file at compile time — it is never hand-drawn.
+
+flows:
+
+  - id: FLOW-101
+    name: OMS Order Creation
+    description: >
+      Captures a new transport order in OMS and sends it to TMS for
+      planification. Target-state flow once OMS is the sole order entry
+      point (the New OMS / legacy OMS transitional interface is tracked
+      separately).
+    status: target
+    steps:
+      - step: 1
+        description: Order captured and validated in OMS (draft -> created).
+        interface_id: null
+        technical_owner: AndSoft OMS team
+      - step: 2
+        description: OMS sends the new order to TMS for planification.
+        interface_id: IF-101
+        technical_owner: AndSoft
+      - step: 3
+        description: TMS acknowledges receipt and queues the order for planification.
+        interface_id: null
+        technical_owner: AndSoft TMS team
+    monitoring_points:
+      - "IF-101 delivery failure or timeout on the OMS side"
+      - "Order stuck in 'created' status longer than the agreed SLA without a planification confirmation"
+    error_handling: >
+      IF-101 failures are retried by OMS on a fixed backoff schedule; an
+      order that fails all retries is flagged to the OMS support queue
+      rather than silently dropped.
+    recovery: >
+      Orders unresolved after retries are visible in the OMS exception
+      queue and can be manually resubmitted once the underlying issue
+      (e.g. a TMS outage) is cleared.
+
+  - id: FLOW-102
+    name: TMS Transport Planification
+    description: >
+      Describes how TMS plans the transport for an order it has received
+      and keeps OMS informed of the plan and its status as it evolves.
+    status: target
+    steps:
+      - step: 1
+        description: TMS planification engine schedules the transport (site, date, mode).
+        interface_id: null
+        technical_owner: AndSoft TMS team
+      - step: 2
+        description: TMS sends the planification confirmation back to OMS.
+        interface_id: IF-102
+        technical_owner: AndSoft
+      - step: 3
+        description: TMS pushes planification status updates to OMS as the plan changes.
+        interface_id: IF-103
+        technical_owner: AndSoft
+    monitoring_points:
+      - "IF-102 not received within the agreed planification SLA after order receipt"
+      - "Planification status stuck in 'pending', or repeatedly cycling through 're-planned'"
+    error_handling: >
+      A planification failure (plan-failed) triggers an IF-103 status
+      update so OMS can surface it to the business rather than the order
+      silently stalling.
+    recovery: >
+      Failed planifications are re-queued by TMS once the blocking
+      condition (e.g. capacity, missing site data) is resolved; OMS
+      reflects the retry via the same IF-103 channel.

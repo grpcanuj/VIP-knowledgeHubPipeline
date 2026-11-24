@@ -1,0 +1,172 @@
+name: ingest
+
+# Reads vendor documents already on the VM (repo variable DOCS_DIR), runs extract + lint, and opens a
+# review PR against the variant's branch. Runs from the default branch for dispatch/schedule events.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      interface_id:
+        description: Interface id from the manifest (blank = all enabled interfaces)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PIPELINE_DIR: Knowledge_Hub_Build_Pipeline_4/Knowledge_Hub_Build_Pipeline_4
+  DOCS_DIR: ${{ vars.DOCS_DIR || 'C:\knowledge-hub\docs' }}
+
+# Windows runner; steps use Git Bash (installed with Git for Windows).
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    runs-on: [self-hosted, windows, knowledge-hub]
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      has_work: ${{ steps.plan.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          echo "$RUNNER_TEMP/venv/Scripts" >> "$GITHUB_PATH"
+      - run: pip install pyyaml
+      - id: plan
+        env:
+          IF_ID: ${{ inputs.interface_id }}
+        working-directory: ${{ env.PIPELINE_DIR }}
+        run: python scripts/ingest_manifest.py --manifest interfaces.manifest.yaml --id "$IF_ID"
+
+  ingest:
+    needs: plan
+    if: needs.plan.outputs.has_work == 'true'
+    runs-on: [self-hosted, windows, knowledge-hub]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    concurrency:
+      group: ingest-${{ matrix.id }}
+      cancel-in-progress: false
+    env:
+      IF_ID: ${{ matrix.id }}
+      IF_NAME: ${{ matrix.name }}
+      DOMAIN: ${{ matrix.domain }}
+      TEMPLATE: ${{ matrix.template }}
+      SP_PATH: ${{ matrix.sharepoint_path }}
+      BASE_BRANCH: ${{ matrix.base_branch }}
+    steps:
+      # Common tooling (fetch script) comes from the triggering ref.
+      - uses: actions/checkout@v4
+        with:
+          path: common
+
+      # Variant content and its own extractor/lint scripts come from the variant's branch.
+      # A PAT or GitHub App token is needed so the PR triggers Build and the guard.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.base_branch }}
+          path: work
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Create Python venv
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          echo "$RUNNER_TEMP/venv/Scripts" >> "$GITHUB_PATH"
+
+      - name: Install pipeline dependencies
+        run: pip install -r "work/$PIPELINE_DIR/requirements.txt"
+
+      - name: Pick up document from the VM
+        id: fetch
+        run: |
+          python "common/$PIPELINE_DIR/scripts/fetch_from_local.py" \
+            --id "$IF_ID" \
+            --docs-dir "$DOCS_DIR" \
+            --file "$(basename "$SP_PATH")" \
+            --lock "work/$PIPELINE_DIR/source_docs.lock.json"
+
+      - name: Stage 1 - extract
+        if: steps.fetch.outputs.changed == 'true'
+        working-directory: work/${{ env.PIPELINE_DIR }}
+        env:
+          DOCX: ${{ steps.fetch.outputs.docx_path }}
+        run: |
+          case "$TEMPLATE" in
+            json) python scripts/extract_interface_from_docx.py "$DOCX" --id "$IF_ID" --name "$IF_NAME" --out-dir "domains/$DOMAIN" ;;
+            xml)  python scripts/extract_interface_from_docx_xml.py "$DOCX" --id "$IF_ID" --name "$IF_NAME" --out-dir "domains/$DOMAIN" ;;
+          esac
+
+      # Exit code 1 means blocking findings, which is a result to report, not a failure.
+      - name: Stage 1.5 - lint (json template)
+        if: steps.fetch.outputs.changed == 'true' && matrix.template == 'json'
+        working-directory: work/${{ env.PIPELINE_DIR }}
+        env:
+          DOCX: ${{ steps.fetch.outputs.docx_path }}
+        run: python scripts/lint_source_document.py "$DOCX" --out-dir "domains/$DOMAIN" || true
+
+      - name: Findings tracker
+        if: steps.fetch.outputs.changed == 'true'
+        continue-on-error: true
+        working-directory: work/${{ env.PIPELINE_DIR }}
+        run: |
+          python scripts/generate_findings_tracker.py --domain-dir "domains/$DOMAIN" --domain-name "$DOMAIN" \
+            --interface-id "$IF_ID" --out "$RUNNER_TEMP/out/${IF_ID}_Findings_Tracker.xlsx"
+
+      - name: Open or update the review PR
+        if: steps.fetch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        working-directory: work
+        run: |
+          report="$PIPELINE_DIR/domains/$DOMAIN/DOC_QUALITY_REPORT.md"
+          blocking=$(grep -oE '\*\*[0-9]+ blocking' "$report" | grep -oE '[0-9]+' | head -n1 || true)
+          blocking=${blocking:-0}
+          if [ "$blocking" -gt 0 ]; then label="vendor-fix-required"; other="ready-for-review"; else label="ready-for-review"; other="vendor-fix-required"; fi
+
+          git config user.name "knowledge-hub-ingest"
+          git config user.email "knowledge-hub-ingest@users.noreply.github.com"
+          branch="ingest/${IF_ID}"
+          git checkout -q -B "$branch"
+          git add "$PIPELINE_DIR/domains/$DOMAIN" "$PIPELINE_DIR/source_docs.lock.json"
+          if git diff --cached --quiet; then echo "No changes to commit"; exit 0; fi
+          git commit -q -m "ingest($IF_ID): refresh drafts from vendor document"
+
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch -q origin "$branch"
+            if git diff --quiet "origin/$branch" HEAD; then echo "Review branch already up to date"; exit 0; fi
+          fi
+          git push --force origin "$branch"
+
+          {
+            echo "Automatic ingest of \`$(basename "$SP_PATH")\` for interface **$IF_ID** (variant \`${BASE_BRANCH}\`)."
+            echo
+            echo "- Document quality: **$blocking blocking** finding(s). See \`DOC_QUALITY_REPORT.md\` and \`REVIEW_REPORT.md\` in the domain folder."
+            echo "- Final \`fields.yaml\` / \`interfaces.yaml\` are not changed. Review the drafts, then promote them in this PR (Stage 2)."
+            echo "- Findings tracker: attached to the workflow run as an artifact."
+          } > "$RUNNER_TEMP/pr_body.md"
+
+          gh label create ready-for-review --color 0E8A16 --force
+          gh label create vendor-fix-required --color B60205 --force
+
+          existing=$(gh pr list --head "$branch" --base "$BASE_BRANCH" --state open --json number --jq '.[0].number')
+          if [ -z "$existing" ]; then
+            gh pr create --head "$branch" --base "$BASE_BRANCH" --title "Ingest $IF_ID from vendor document" \
+              --body-file "$RUNNER_TEMP/pr_body.md" --label "$label"
+          else
+            gh pr edit "$existing" --body-file "$RUNNER_TEMP/pr_body.md" --add-label "$label" --remove-label "$other"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: steps.fetch.outputs.changed == 'true'
+        with:
+          name: ingest-${{ matrix.id }}
+          path: |
+            ${{ runner.temp }}/out/*.xlsx
+            work/${{ env.PIPELINE_DIR }}/domains/${{ matrix.domain }}/*REPORT*.md
+          if-no-files-found: warn

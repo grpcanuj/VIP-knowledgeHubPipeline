@@ -1,0 +1,771 @@
+# AUTO-GENERATED DRAFT from CV07_01_TMS_SHIP_ORDERS.docx - review before promoting.
+# Domain: CV07_01_TMS_SHIP_ORDERS
+
+fields:
+- field_id: meta-senderid
+  name: Meta Sender Id
+  description: 'Fixed value: CAT2020'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: CAT2020'
+  format: max length 35
+- field_id: meta-duplicatereceiverid
+  name: Meta Duplicate Receiver Id
+  description: 'Fixed value: shippeo'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: shippeo'
+  format: max length 35
+- field_id: meta-messagetype
+  name: Meta Message Type
+  description: 'Fixed value: GTF511'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: GTF511'
+  format: max length 6
+- field_id: meta-messagedate
+  name: Meta Message Date
+  description: Date of the message
+  data_type: datetime
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+- field_id: meta-messagefunction
+  name: Meta Message Function
+  description: 'Fixed value: 0'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: 0'
+  format: max length 1
+- field_id: meta-messagereference
+  name: Meta Message Reference
+  description: Unique reference of the message (counter)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: shipment-technicalreference
+  name: Shipment Technical Reference
+  description: Concatenation of the chassis number and the lot number
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: shipment-reference
+  name: Shipment Reference
+  description: Null for CAT load, else it is the supplier load reference
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: shipment-transportmode
+  name: Shipment Transport Mode
+  description: Mode of transport (road)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: transportservicebuyer-identifier
+  name: Transportservicebuyer Identifier
+  description: CATLEO, CATADVANTAGE...
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: transportservicebuyer-qualifier
+  name: Transportservicebuyer Qualifier
+  description: 'Fixed value: ZZ'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: ZZ'
+  format: max length 3
+- field_id: carrier-identifier
+  name: Carrier Identifier
+  description: SAP code of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-qualifier
+  name: Carrier Qualifier
+  description: 'Fixed value: ZZ'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: ZZ'
+  format: max length 3
+- field_id: transportmean-qualifier
+  name: Transportmean Qualifier
+  description: Type of mean (truck)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 8
+- field_id: transportmean-identifier
+  name: Transportmean Identifier
+  description: Plate number of the truck
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: transportmean-text
+  name: Transportmean Text
+  description: Plate number of the truck
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 70
+- field_id: transportmean-istrackable
+  name: Transportmean Is Trackable
+  description: 'Fixed value: true'
+  data_type: boolean
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: true'
+- field_id: consignor-name
+  name: Consignor Name
+  description: Name of the consignor (CAT FRANCE SAS)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignor-address
+  name: Consignor Address
+  description: Address of the consignor (5-7 rue Frédéric Clavel)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignor-city
+  name: Consignor City
+  description: City of the consignor (SURESNES)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignor-zip
+  name: Consignor Zip
+  description: Zip of the consignor (92150)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignor-country
+  name: Consignor Country
+  description: Country of the consignor (FR)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignor-taxreference
+  name: Consignor Tax Reference
+  description: Tax reference of the consignor (FR67572158269)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-name
+  name: Customer Name
+  description: Name of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-address
+  name: Customer Address
+  description: Address of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-city
+  name: Customer City
+  description: City of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-zip
+  name: Customer Zip
+  description: Zip of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-country
+  name: Customer Country
+  description: Country of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customer-taxreference
+  name: Customer Tax Reference
+  description: Tax reference of the consignee
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-name
+  name: Carrier Name
+  description: Name of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-address
+  name: Carrier Address
+  description: Address of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-city
+  name: Carrier City
+  description: City of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-zip
+  name: Carrier Zip
+  description: Zip of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-country
+  name: Carrier Country
+  description: Country of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: carrier-taxreference
+  name: Carrier Tax Reference
+  description: Tax reference of the carrier
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: customattributes-name
+  name: Customattributes Name
+  description: '(Only for Portugal) Fixed value: CodeATPortugal'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: CodeATPortugal'
+  format: max length 35
+- field_id: customattributes-value
+  name: Customattributes Value
+  description: (Only for Portugal) ATCUD of the load
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: documentproperties-type
+  name: Documentproperties Type
+  description: Type of properties (national_consignment_note)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: documentproperties-additionalconditions
+  name: Documentproperties Additional Conditions
+  description: Legal conditions of the transport
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: orders-goodsdescription
+  name: Orders Goods Description
+  description: 'Fixed value: Cars'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: Cars'
+  format: max length 70
+- field_id: references-reference
+  name: References Reference
+  description: 'Reused for 3 distinct purposes across the array slots this field appears in: Concatenation
+    of the chassis number and the lot number | Load number with Renault format | Load number'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - This generic attribute name is reused for 3 unrelated purposes across its occurrences, with no fixed
+    value to tell them apart programmatically - worth raising with Andsoft as a design question (should
+    these be separate named fields instead of one generic 'reference'?) rather than something the glossary
+    can safely model as one field.
+  format: max length 35
+- field_id: references-qualifier
+  name: References Qualifier
+  description: 'Reused for 3 distinct purposes across the array slots this field appears in: Fixed value:
+    DQ | Fixed value: MA | Fixed value: ADL'
+  data_type: enum
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Observed as a repeatable array slot with 3 documented example value(s) in the source spec: DQ, MA,
+    ADL. Confirm with Andsoft whether this is the complete set of allowed values or just the examples
+    shown.'
+  allowed_values:
+  - DQ
+  - MA
+  - ADL
+  format: max length 3
+- field_id: pickup-identifications-identifier
+  name: Identifications Identifier
+  description: Code of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: pickup-identifications-qualifier
+  name: Identifications Qualifier
+  description: 'Fixed value: ZZ'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: ZZ'
+  format: max length 3
+- field_id: pickup-name
+  name: Pickup Name
+  description: Name of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: pickup-address1
+  name: Pickup Address1
+  description: Address1 of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: pickup-address2
+  name: Pickup Address2
+  description: Address2 of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: pickup-country
+  name: Pickup Country
+  description: Country of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 2
+- field_id: pickup-postalcode
+  name: Pickup Postal Code
+  description: Postal code of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 10
+- field_id: pickup-city
+  name: Pickup City
+  description: City of the pickup point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: pickup-latitude
+  name: Pickup Latitude
+  description: Latitude of the pickup point
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '2.6'
+- field_id: pickup-longitude
+  name: Pickup Longitude
+  description: Longitude of the pickup point
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '3.6'
+- field_id: pickup-instructions
+  name: Pickup Instructions
+  description: Instruction at pickup (information on the vehicle)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 512
+- field_id: pickup-dates-qualifier
+  name: Dates Qualifier
+  description: 'Fixed value: 398'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: 398'
+  format: max length 3
+- field_id: pickup-dates-datetime
+  name: Dates Date Time
+  description: Planned date for pickup
+  data_type: datetime
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+- field_id: consignee-identifications-identifier
+  name: Identifications Identifier
+  description: Code of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignee-identifications-qualifier
+  name: Identifications Qualifier
+  description: 'Fixed value: ZZ'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: ZZ'
+  format: max length 3
+- field_id: consignee-name
+  name: Consignee Name
+  description: Name of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignee-address1
+  name: Consignee Address1
+  description: Address1 of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignee-address2
+  name: Consignee Address2
+  description: Address2 of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignee-country
+  name: Consignee Country
+  description: Country of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 2
+- field_id: consignee-postalcode
+  name: Consignee Postal Code
+  description: Postal code of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 10
+- field_id: consignee-city
+  name: Consignee City
+  description: City of the delivery point
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: consignee-latitude
+  name: Consignee Latitude
+  description: Latitude of the delivery point
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '2.6'
+- field_id: consignee-longitude
+  name: Consignee Longitude
+  description: Longitude of the delivery point
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '3.6'
+- field_id: consignee-instructions
+  name: Consignee Instructions
+  description: Instruction at delivery (information on the vehicle)
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 512
+- field_id: consignee-dates-qualifier
+  name: Dates Qualifier
+  description: 'Fixed value: 2'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: 2'
+  format: max length 3
+- field_id: consignee-dates-datetime
+  name: Dates Date Time
+  description: Planned date for delivery
+  data_type: datetime
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+- field_id: clientidentification-agency
+  name: Clientidentification Agency
+  description: Agency code in charge of the transport
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: attributes-name
+  name: Attributes Name
+  description: 'Reused for 4 distinct purposes across the array slots this field appears in: Fixed value:
+    carrier_code | Fixed value: origin_location_code | Fixed value: destination_location_code | Fixed
+    value: client'
+  data_type: enum
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Observed as a repeatable array slot with 4 documented example value(s) in the source spec: carrier_code,
+    origin_location_code, destination_location_code, client. Confirm with Andsoft whether this is the
+    complete set of allowed values or just the examples shown.'
+  allowed_values:
+  - carrier_code
+  - origin_location_code
+  - destination_location_code
+  - client
+  format: max length 35
+- field_id: attributes-value
+  name: Attributes Value
+  description: 'Reused for 4 distinct purposes across the array slots this field appears in: SAP code
+    of the carrier | Customer code of the pickup point | Customer code of the delivery point | Traffic
+    code'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - This generic attribute name is reused for 4 unrelated purposes across its occurrences, with no fixed
+    value to tell them apart programmatically - worth raising with Andsoft as a design question (should
+    these be separate named fields instead of one generic 'value'?) rather than something the glossary
+    can safely model as one field.
+  format: max length 35
+- field_id: quantity-grossweight
+  name: Quantity Gross Weight
+  description: Weight of the car
+  data_type: decimal
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: '5.3'
+- field_id: tags-label
+  name: Tags Label
+  description: 'Reused for 4 distinct purposes across the array slots this field appears in: Traffic code
+    | SAP code of the carrier | RTTV system of the customer | Information that the trip is in rupture'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - This generic attribute name is reused for 4 unrelated purposes across its occurrences, with no fixed
+    value to tell them apart programmatically - worth raising with Andsoft as a design question (should
+    these be separate named fields instead of one generic 'label'?) rather than something the glossary
+    can safely model as one field.
+  format: max length 35
+- field_id: tags-permission
+  name: Tags Permission
+  description: 'Fixed value: publicReadOnly'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: publicReadOnly'
+  format: max length 35
+- field_id: tags-active
+  name: Tags Active
+  description: 'Fixed value: true'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: true'
+  format: max length 35
+- field_id: items-reference
+  name: Items Reference
+  description: VIN number of the vehicle
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: items-ean
+  name: Items EA N
+  description: Chassis number of the vehicle
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: items-description
+  name: Items Description
+  description: 'Fixed value: VIN and VIS'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: VIN and VIS'
+  format: max length 35
+- field_id: handlingunits-trackingcode
+  name: Handlingunits Tracking Code
+  description: VIN number of the vehicle, or empty for empty load
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules: []
+  format: max length 35
+- field_id: handlingunits-custompackagingqualifier
+  name: Handlingunits Custom Packaging Qualifier
+  description: 'Fixed value: VIN'
+  data_type: string
+  status: mandatory
+  source_system: AndSoft TMS
+  sensitivity: internal
+  quality_rules:
+  - 'Fixed value supplied by the interface spec: VIN'
+  format: max length 35
